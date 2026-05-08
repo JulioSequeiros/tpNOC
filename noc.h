@@ -47,9 +47,10 @@ typedef enum
     RESOLVIDO
 }EstadoIncidente;
 
-// estretura de dados
+// ESTRETURA DE DADOS
 
-typedef struct
+// IDENTIFICACAO DO EQUIPAMENTO
+typedef struct Equipamentos
 {
     TipoEquipamento tipo;
     int codigo;
@@ -63,6 +64,7 @@ typedef struct
     char dataUltimaVerificacao[MAX_DATA];
 }Equipamento;
 
+//
 typedef struct
 {
     int codigo;
@@ -98,7 +100,7 @@ typedef struct
 // UTIL
 
 void obterDataAtual(char *data);
-void limparbuffer(void);
+void limparBuffer(void);
 int lerInteiro(const char *prompt, int min, int max);
 void lerString(const char *prompt, char *dest, int maxLen);
 const char *tipoToString(TipoEquipamento tipo);
@@ -118,7 +120,7 @@ void listarPorTipo(const Sistema *s);
 void listarPorEstado(const Sistema *s);
 void pesquisarEquipamento(const Sistema *s);
 NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
-void imprimirEquipamento(const Equipamento *s);
+void imprimirEquipamento(const Equipamento *e);
 void imprimirCabecalho(void);
 
 // INCIDENTES
@@ -133,12 +135,12 @@ NodeIncidente *encontrarPorCodigoInc(const Sistema *s, int codigo);
 
 // FICHEIROS
 
-void guardarFicheiro(Sistema *s);
+void guardarFicheiro(const Sistema *s);
 void carregarFicheiro(Sistema *s);
 
 // MENU
 
-void menuPrincipal(void);
+void menuPrincipal(Sistema *s);
 void menuEquipamento(Sistema *s);
 void menuIncidente(Sistema *s);
 void menuFicheiro(Sistema *s);

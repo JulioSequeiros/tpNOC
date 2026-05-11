@@ -1,82 +1,108 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <locale.h>
+
+#include "noc.h"
+#include "noc.h"
+#include "noc.h"
+#include "noc.h"
+#include "noc.h"
+#include "noc.h"
+
+// Declaracoes das funcoes dos modulos
+void menuInventario();
+void menuConectividade();
+void menuSensores();
+void menuIncidentes();
+void menuConfiguracoes();
+void menuRelatorios();
+void carregarTodosDados();
+void guardarTodosDados();
+
+void limparBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+void pausar() {
+    printf("\nPressione ENTER para continuar...");
+    limparBuffer();
+    getchar();
+}
+
+void limparEcra() {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
 
 int main() {
+    setlocale(LC_ALL, "Portuguese");
     int opcao;
-
+    
+    printf("============================================\n");
+    printf("   SISTEMA MINI NOC - MONITORIZACAO DE REDE  \n");
+    printf("   Licenciatura em Redes e Sistemas         \n");
+    printf("============================================\n");
+    printf("\nA carregar dados existentes...\n");
+    
+    carregarTodosDados();
+    
+    printf("Dados carregados com sucesso!\n");
+    printf("\nPrima ENTER para continuar...");
+    limparBuffer();
+    getchar();
+    
     do {
-        // Tela de boas-vindas
-        printf("=================================================================================\n");
-        printf("====== Bem-vindo ao Sistema Mini NOC para Monitorizacao da Rede de uma PME ======\n");
-        printf("=================================================================================\n");
-        // Menu do Sistema
-        printf("================================ Menu de Opcoes =================================\n");
-        printf("1 - Adicionar um Novo Equipamentona Rede\n");
-        printf("2 - Remover um Equipamento de Rede.\n");
-        printf("3 - Alterar os Dados do Equipamento.\n");
-        printf("4 - Alterar o Status do Equipamento (Operacional/Em Falha /Em Manutencao ou Desativado).\n");
-        printf("5 - Listar todos os Equipamentos.\n");
-        printf("6 - Listar todos os Equipamentos por tipo.\n");
-        printf("7 - Listar todos os Equipamentos por Estado.\n");
-        printf("8 - Pesquisar um Equipamento por: (Código, Endereço IP ou Endereço MAC).\n");
-        printf("9 - Guardar e Carregar o Inventário de Equipamentos através de Ficheiro Binário.\n");
-        printf("10 - Outras Atividades que considere relevantes.\n");
-        printf("0 - Sair\n");
-        printf("=================================================================================\n");
-        printf("Escolha uma opcao: ");
+        limparEcra();
+        printf("============================================\n");
+        printf("   SISTEMA MINI NOC - MONITORIZACAO DE REDE  \n");
+        printf("============================================\n");
+        printf("  1. Modulo 1 - Inventario de Equipamentos   \n");
+        printf("  2. Modulo 2 - Testes de Conectividade      \n");
+        printf("  3. Modulo 3 - Monitorizacao de Sensores    \n");
+        printf("  4. Modulo 4 - Incidentes Tecnicos          \n");
+        printf("  5. Modulo 5 - Registo de Configuracoes     \n");
+        printf("  6. Modulo 6 - Relatorios e Ficheiros       \n");
+        printf("--------------------------------------------\n");
+        printf("  0. Sair da Aplicacao                       \n");
+        printf("============================================\n");
+        printf("Opcao: ");
         scanf("%d", &opcao);
-
-        // Processar opção
+        limparBuffer();
+        
         switch(opcao) {
-
             case 1:
-                printf("1. Adicionar um Novo Equipamento de Rede.\n");
+                //menuInventario();
                 break;
-
-            case 2: {
-                printf("2. Remover um Equipamento de Rede.\n");
+            case 2:
+                menuConectividade();
                 break;
-            }
-            case 3: {
-                printf("3. Alterar os Dados do Equipamento.\n");
+            case 3:
+                //menuSensores();
                 break;
-            }
-            case 4: {
-                printf("4. Alterar o Status do Equipamento (Operacional/Em Falha /Em Manutencao ou Desativado).\n");
+            case 4:
+                menuIncidentes();
                 break;
-            }
-            case 5: {
-                printf("5. Listar todos os Equipamentos.\n");
+            case 5:
+                //menuConfiguracoes();
                 break;
-            }
-            case 6: {
-                printf("6. Listar todos os Equipamentos por tipo.\n");
+            case 6:
+                menuRelatorios();
                 break;
-            }
-            case 7: {
-                printf("7. Listar todos os Equipamentos por Estado.\n");
-                break;
-            }
-            case 8: {
-                printf("8. Pesquisar um Equipamento por: (Código, Endereço IP ou Endereço MAC).\n");
-                break;
-            }
-            case 9:{
-                printf("9. Guardar e Carregar o Inventário de Equipamentos através de Ficheiro Binário.\n");
-                break;
-            }
-            case 10: {
-                printf("10. Outras Atividades: (Gerar Relatórios, Alertas de Falhas, etc.).\n");
-                break;
-            }
             case 0:
-                printf("\nA Encerrar o Sistema.\n");
+                printf("\nA guardar dados antes de sair...\n");
+                guardarTodosDados();
+                printf("Aplicacao terminada. Ate breve!\n");
                 break;
-
             default:
-                printf("\n[Erro] Opcao invalida!\n");
+                printf("\nOpcao invalida! Tente novamente.\n");
+                pausar();
         }
-
     } while(opcao != 0);
-
+    
     return 0;
 }

@@ -10,14 +10,14 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX_NOME
-#define MAX_MARCA
-#define MAX_MODELO
-#define MAX_IP
-#define MAX_LOCAL
-#define MAX_MAC
-#define MAX_DATA
-#define MAX_DESC
+#define MAX_NOME 50
+#define MAX_MARCA 30
+#define MAX_MODELO 30
+#define MAX_IP 16
+#define MAX_LOCAL 50
+#define MAX_MAC 18
+#define MAX_DATA 11
+#define MAX_DESC 200
 #define FICHEIRO_DAT "iventario.dat"
 
 //enums
@@ -97,8 +97,7 @@ typedef struct
     int proximoCodigoInc;
 }Sistema;
 
-// UTIL
-
+// ========== UTIL ==========
 void obterDataAtual(char *data);
 void limparBuffer(void);
 int lerInteiro(const char *prompt, int min, int max);
@@ -108,9 +107,10 @@ const char *estadoEquipamentoToString(EstadoEquipamento estado);
 const char *estadoIncidenteToString(EstadoIncidente estado);
 TipoEquipamento selecionarTipo(void);
 EstadoEquipamento selecionarEstado(void);
+void limparEcra(void);
+void pausar(void);
 
-// EQUIPAMENTOS
-
+// ========== EQUIPAMENTOS ==========
 void adicionarEquipamento(Sistema *s);
 void removerEquipamento(Sistema *s);
 void alterarEquipamento(Sistema *s);
@@ -123,8 +123,7 @@ NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
 void imprimirEquipamento(const Equipamento *e);
 void imprimirCabecalho(void);
 
-// INCIDENTES
-
+// ========== INCIDENTES ==========
 void adicionarIncidentes(Sistema *s);
 void resolverIncidente(Sistema *s);
 void listarIncidentes(const Sistema *s);
@@ -133,13 +132,43 @@ void listarIncidentesPendentes(const Sistema *s);
 int temIncidentePendente(const Sistema *s, int codigoEquipamento);
 NodeIncidente *encontrarPorCodigoInc(const Sistema *s, int codigo);
 
-// FICHEIROS
-
+// ========== FICHEIROS ==========
 void guardarFicheiro(const Sistema *s);
 void carregarFicheiro(Sistema *s);
 
-// MENU
+// ========== MODULO 2 - CONECTIVIDADE ==========
+void menuConectividade(Sistema *s);
+void executarPingEquipamento(Sistema *s);
+void guardarResultadoPing(Sistema *s);
+void verificarRespostaPing(Sistema *s);
+void pingGeral(Sistema *s);
+void mostrarEstatisticas(Sistema *s);
+int analisarResultadoPingArquivo(const char *arquivo);
+void registarLogMonitorizacaoTexto(const char *mensagem);
+void comandoIpConfig(Sistema *s);
+void comandoArp(Sistema *s);
+void comandoNslookup(Sistema *s);
+void comandoTracert(Sistema *s);
 
+// ========== MODULO 4 - INCIDENTES (completo) ==========
+void menuIncidentes(Sistema *s);
+void criarIncidenteManual(Sistema *s);
+void criarIncidenteAutomaticoPing(Sistema *s, int codigoEquipamento);
+void criarIncidenteAutomaticoSensor(Sistema *s, char *codigoSensor, char *descricao);
+void processarProximoIncidente(Sistema *s);
+void resolverIncidenteWrapper(Sistema *s);
+void listarIncidentesPorPrioridade(Sistema *s);
+void listarIncidentesConcluidos(Sistema *s);
+void listarIncidentesEmCurso(Sistema *s);
+const char *prioridadeToString(int prioridade);
+int temIncidentePendenteEquipamento(const Sistema *s, int codigoEquipamento);
+
+// ========== MODULO 6 - RELATORIOS ==========
+void menuRelatorios(Sistema *s);
+void gerarRelatorioEstadoRede(int mes, int ano);
+void gerarRelatorioMensalIncidentes(int mes, int ano);
+
+// ========== MENU PRINCIPAL ==========
 void menuPrincipal(Sistema *s);
 void menuEquipamento(Sistema *s);
 void menuIncidente(Sistema *s);

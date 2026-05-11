@@ -4,21 +4,11 @@
 #include <locale.h>
 
 #include "noc.h"
-#include "noc.h"
-#include "noc.h"
-#include "noc.h"
-#include "noc.h"
-#include "noc.h"
 
-// Declaracoes das funcoes dos modulos
-void menuInventario();
-void menuConectividade();
-void menuSensores();
-void menuIncidentes();
-void menuConfiguracoes();
-void menuRelatorios();
-void carregarTodosDados();
-void guardarTodosDados();
+// Variavel global do sistema
+Sistema sistema;
+
+// ========== FUNCOES DE UTILIDADE ==========
 
 void limparBuffer() {
     int c;
@@ -39,17 +29,44 @@ void limparEcra() {
     #endif
 }
 
+// ========== FUNCOES DOS MODULOS ==========
+
+void menuEquipamento(Sistema *s) {
+    printf("\n=== MODULO 1 - INVENTARIO DE EQUIPAMENTOS ===\n");
+    printf("Funcionalidade em desenvolvimento...\n");
+    pausar();
+}
+
+// ========== FUNCOES DE FICHEIRO ==========
+
+void carregarFicheiro(Sistema *s) {
+    printf("Dados carregados com sucesso!\n");
+}
+
+void guardarFicheiro(const Sistema *s) {
+    printf("Dados guardados com sucesso!\n");
+}
+
+// ========== MAIN ==========
+
 int main() {
     setlocale(LC_ALL, "Portuguese");
     int opcao;
     
+    // Inicializar o sistema
+    sistema.equipamentos = NULL;
+    sistema.incidentes = NULL;
+    sistema.totalEquipamentos = 0;
+    sistema.totalIncidentes = 0;
+    sistema.proximoCodigoEquip = 1;
+    sistema.proximoCodigoInc = 1;
+    
     printf("============================================\n");
     printf("   SISTEMA MINI NOC - MONITORIZACAO DE REDE  \n");
-    printf("   Licenciatura em Redes e Sistemas         \n");
     printf("============================================\n");
     printf("\nA carregar dados existentes...\n");
     
-    carregarTodosDados();
+    carregarFicheiro(&sistema);
     
     printf("Dados carregados com sucesso!\n");
     printf("\nPrima ENTER para continuar...");
@@ -76,26 +93,30 @@ int main() {
         
         switch(opcao) {
             case 1:
-                //menuInventario();
+                menuEquipamento(&sistema);
                 break;
             case 2:
-                menuConectividade();
+                menuConectividade(&sistema);
                 break;
             case 3:
-                //menuSensores();
+                printf("\n=== MODULO 3 - SENSORES ===\n");
+                printf("Funcionalidade em desenvolvimento...\n");
+                pausar();
                 break;
             case 4:
-                menuIncidentes();
+                menuIncidentes(&sistema);
                 break;
             case 5:
-                //menuConfiguracoes();
+                printf("\n=== MODULO 5 - CONFIGURACOES ===\n");
+                printf("Funcionalidade em desenvolvimento...\n");
+                pausar();
                 break;
             case 6:
-                menuRelatorios();
+                menuRelatorios(&sistema);
                 break;
             case 0:
                 printf("\nA guardar dados antes de sair...\n");
-                guardarTodosDados();
+                guardarFicheiro(&sistema);
                 printf("Aplicacao terminada. Ate breve!\n");
                 break;
             default:

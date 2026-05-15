@@ -346,3 +346,71 @@ void listarPorEstado(Sistema *s)
     printf("\n Total de equipamentos com estado \"%s\": %d\n", estadoEquipamentoToString(estado), count);
     pausar();
 }
+
+//8. Pesquisar equipamento por codigo, IP, MAC
+void pesquisarEquipamento(Sistema *s)
+{
+    limparEcra();
+    printf("Pesquisar Equipamento\n");
+
+    printf("Pesquisar por:\n1. Código\n2. Endereço IP\n3. Endereço MAC\n");
+    int opcao = lerInteiro("Selecione a opção de pesquisa", 1,3);
+
+    if (opcao == 1)
+    {
+        int codigo = lerInteiro("Insira o codigo do equipamento a pesquisar", 1, s->proximoCodigoEquip);
+        NodeEquipamento *no = encontrarPorCodigo(s, codigo);
+        if (no == NULL)
+        {
+            printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
+        }
+        else
+        {
+            imprimirCabecalho();
+            imprimirEquipamento(&no->dados);
+        }
+    }
+    else if (opcao == 2)
+    {
+        char ip[MAX_DESC];
+        lerString("Insira o endereco IP do equipamento a pesquisar", ip, MAX_DESC);
+        NodeEquipamento *no = encontrarPorIP(s, ip);
+        if (no == NULL)
+        {
+            printf("\n [!] Equipamento com endereco IP \"%s\" nao encontrado.\n", ip);
+        }
+        else
+        {
+            imprimirCabecalho();
+            imprimirEquipamento(&no->dados);
+        }
+    }
+    else if (opcao == 3)
+    {
+        char mac[MAX_DESC];
+        lerString("Insira o endereco MAC do equipamento a pesquisar", mac, MAX_DESC);
+        NodeEquipamento *no = encontrarPorMAC(s, mac);
+        if (no == NULL)
+        {
+            printf("\n [!] Equipamento com endereco MAC \"%s\" nao encontrado.\n", mac);
+        }
+        else
+        {
+            imprimirCabecalho();
+            imprimirEquipamento(&no->dados);
+        }
+    }
+}
+
+//9. Guardar e carregar o inventário para um ficheiro
+void guardarInventario(Sistema *s)
+{
+    limparEcra();
+
+    int opcao = lerInteiro("Selecione a opção\n1. Guardar Inventário\n2. Carrgar Inventário\n", 1, 2);
+
+    if (opcao == 1)
+    {
+        
+    }
+}

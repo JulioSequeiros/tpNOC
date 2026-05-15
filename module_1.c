@@ -1,10 +1,10 @@
-// Modulo 1 : Inventario de Equipamentos da Rede
+// Modulo 1: Inventario de Equipamentos da Rede
 // Created by Julio on 15/05/26.
 //
 
 #include "noc.h"
 
-// 1.Adicionar equipamento
+// 1. Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
     limparEcra();
@@ -52,7 +52,7 @@ void adicionarEquipamento(Sistema *s)
     pausar();
 }
 
-// 2.Remover equipamento
+// 2. Remover equipamento
 void removerEquipamento(Sistema *s)
 {
     limparEcra();
@@ -124,6 +124,91 @@ void removerEquipamento(Sistema *s)
         anterior->proximo = atual->proximo;
 
     printf("\n [OK] Equipamento encontrado com sucesso.\n");
+    pausar();
+}
+
+//3. Alterar os dados de um equipamento
+void alterarEquipamento(Sistema *s)
+{
+    limparEcra();
+    printf("Alterar Dados de Equipamento\n");
+
+    /*
+     * Pergunta ao utilizador o codigo do equipamento que quer alterar os dados
+     */
+    int codigo = lerInteiro("Insira o codigo do equipamento a alterar", 1, s->proximoCodigoEquip);
+
+    /*
+     * Procura na lista ligada, se esse codigo do equipamento e existente,
+     * se nao for e devolvido um aviso a dizer que o equipamento nao existe.
+     */
+    NodeEquipamento *no = encontrarPorCodigo(s, codigo);
+    if (no == NULL)
+    {
+        printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
+        pausar();
+        return;
+    }
+
+    /*
+     * Se o equipamento existier vai para este passo, onde vai apresentar o equipamento que vai ser atualizado;
+     * Depois pergunta ao utilizador quais os dados que quer alterar, e depois atualiza os dados do equipamento.
+     */
+    Equipamento *e = &no->dados;
+    imprimirEquipamento(e);
+    printf("\n Deixe em branco (Enter) para manter o valor atual. \n\n");
+
+    char buffer[MAX_DESC];
+
+    printf(" Nome ['\%s\']: ", e->nome);
+    fgets(buffer, MAX_DESC, stdin);
+    if (buffer[0] == '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->nome, buffer, MAX_DESC - 1);
+    }
+
+    int altTipo = lerInteiro(" Alterar tipo? (1-Sim, 2-Nao)", 1, 2);
+    if (altTipo == 1)
+    {
+        e->tipo = selecionarTipo();
+    }
+
+    printf(" Marca ['\%s\']: ", e->marca);
+    fgets(buffer, MAX_DESC, stdin);
+    if (buffer[0] == '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->marca, buffer, MAX_DESC - 1);
+    }
+
+    printf(" Endereço IP ['\%s\']: ", e->ip);
+    fgets(buffer, MAX_DESC, stdin);
+    if (buffer[0] == '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->ip, buffer, MAX_DESC - 1);
+    }
+
+    printf(" Endereço MAC ['\%s\']: ", e->mac);
+    fgets(buffer, MAX_DESC, stdin);
+    if (buffer[0] == '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->mac, buffer, MAX_DESC - 1);
+    }
+
+    printf(" Localização ['\%s\']: ", e->localizacao);
+    fgets(buffer, MAX_DESC, stdin);
+    if (buffer[0] == '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->localizacao, buffer, MAX_DESC - 1);
+    }
+
+    obterDataAtual(e->dataUltimaVerificacao);
+
+    printf("\n [OK] Dados do equipamento atualizados com sucesso.\n");
     pausar();
 }
 

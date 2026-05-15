@@ -174,7 +174,7 @@ void alterarEquipamento(Sistema *s)
         e->tipo = selecionarTipo();
     }
 
-    printf(" Marca ['\%s\']: ", e->marca);
+    printf(" Marca [\"%s\"]: ", e->marca);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -211,4 +211,102 @@ void alterarEquipamento(Sistema *s)
     printf("\n [OK] Dados do equipamento atualizados com sucesso.\n");
     pausar();
 }
+
+//4. Alterar o estado de um equipamento (Operacional / Em Falha / Em Manutenção / Desativado)
+void alterarEstado(Sistema *s)
+{
+    limparEcra();
+    printf("Alterar Estado de Equipamento\n");
+
+    /*
+     * Pergunta ao utilizador o codigo do equipamento que quer alterar o estado
+     */
+    int codigo = lerInteiro("Insira o codigo do equipamento a alterar o estado", 1, s->proximoCodigoEquip);
+
+    /*
+     * Procura na lista ligada, se esse codigo do equipamento e existente,
+     * se nao for e devolvido um aviso a dizer que o equipamento nao existe.
+     */
+    NodeEquipamento *no = encontrarPorCodigo(s, codigo);
+    if (no == NULL)
+    {
+        printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
+        pausar();
+        return;
+    }
+
+    printf("\n Equipamento: %s\n", no->dados.nome);
+    printf("\n Estado atual: %s\n ", estadoEquipamentoToString(no->dados.estado));
+    printf("\n Novo estado: \n");
+    no->dados.estado = selecionarTipo();
+    obterDataAtual(no->dados.dataUltimaVerificacao);
+
+    printf("\n [OK] Estado do equipamento atualizado para \"%s\".\n", estadoEquipamentoToString(no->dados.estado));
+    pausar();
+}
+
+// 5. Listar Todos os Equipamentos
+void listarEquipamentos(Sistema *s)
+{
+    limparEcra();
+    printf("Lista de Equipamentos\n");
+
+    if (s->equipamentos == NULL)
+    {
+        printf("\n [!] Não existem equipamentos registados.\n");
+        pausar();
+        return;
+    }
+
+    imprimirCabecalho();
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        imprimirEquipamento(&atual->dados);
+        printf("\n-----------------------------\n");
+        atual = atual->proximo;
+    }
+    printf("\n Total de equipamentos: %d\n", s->totalEquipamentos);
+    pausar();
+}
+
+// 6. Listar por Tipo
+void listarPorTipo(Sistema *s)
+{
+    limparEcra();
+    printf("Listar Equipamentos por Tipo\n");
+
+    if (s->equipamentos == NULL)
+    {
+        printf("\n [!] Não existem equipamentos registados.\n");
+        pausar();
+        return;
+    }
+
+    printf("Selecione o tipo de equipamento para listar:\n");
+    TipoEquipamento tipo = selecionarTipo();
+
+    imprimirCabecalho();
+    int count = 0;
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (atual->dados.tipo == tipo)
+        {
+            imprimirEquipamento(&atual->dados);
+            printf("\n-----------------------------\n");
+            count++;
+        }
+        atual = atual->proximo;
+    }
+
+    if (count == 0)
+    {
+        printf("\n [!] Não existem equipamentos do tipo \"%s\" encontrado.\n");
+        tipoToString(tipo);
+    }
+    printf("\n Total de equipamentos do tipo \"%s\": %d\n", tipoToString(tipo), count);
+    pausar();
+}
+
 

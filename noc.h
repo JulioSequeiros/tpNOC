@@ -164,7 +164,6 @@ const char *prioridadeToString(int prioridade);
 int temIncidentePendenteEquipamento(const Sistema *s, int codigoEquipamento);
 
 // ========== MODULO 6 - RELATORIOS ==========
-void menuRelatorios(Sistema *s);
 void gerarRelatorioEstadoRede(int mes, int ano);
 void gerarRelatorioMensalIncidentes(int mes, int ano);
 
@@ -173,7 +172,8 @@ void menuPrincipal(Sistema *s);
 void menuEquipamento(Sistema *s);
 void menuIncidente(Sistema *s);
 void menuFicheiro(Sistema *s);
-void menuEstatistica(const Sistema *s);
+void menuEstatistica(const Sistema *s);   
+void menuRelatorios(Sistema *s);
 void menuSair(void);
 
 #endif //TPNOC_NOC_H

@@ -309,4 +309,40 @@ void listarPorTipo(Sistema *s)
     pausar();
 }
 
+//7. Listar por Estado
+void listarPorEstado(Sistema *s)
+{
+    limparEcra();
+    printf("Listar Equipamentos por Estado\n");
 
+    if (s->equipamentos == NULL)
+    {
+        printf("\n [!] Não existem equipamentos registados.\n");
+        pausar();
+        return;
+    }
+
+    printf("Selecione o estado de equipamento para listar:\n");
+    EstadoEquipamento estado = selecionarEstado();
+
+    imprimirCabecalho();
+    int count = 0;
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (atual->dados.estado == estado)
+        {
+            imprimirEquipamento(&atual->dados);
+            printf("\n-----------------------------\n");
+            count++;
+        }
+        atual = atual->proximo;
+    }
+
+    if (count == 0)
+    {
+        printf("\n [!] Não existem equipamentos com estado \"%s\" encontrado.\n", estadoEquipamentoToString(estado));
+    }
+    printf("\n Total de equipamentos com estado \"%s\": %d\n", estadoEquipamentoToString(estado), count);
+    pausar();
+}

@@ -4,10 +4,13 @@
 
 #include "noc.h"
 
-// Adicionar equipamento
+// 1.Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
     limparEcra();
+
+    printf("Adicionar Equipamento\n");
+
     printf("Insira o nome do equipamento: ");
 
     // Invoca um novo indice para o array da memoria alocada
@@ -49,8 +52,78 @@ void adicionarEquipamento(Sistema *s)
     pausar();
 }
 
-// Remover equipamento
+// 2.Remover equipamento
 void removerEquipamento(Sistema *s)
 {
+    limparEcra();
+    printf("Remover Equipamento\n");
 
+    /*
+     * Realiza um check automatico na lista ligada se tem algum equipamento alocado,
+     * se nao tiver devolve uma mensagem.
+     */
+
+    if (s->equipamentos == NULL)
+    {
+        printf("\n [!] Não existem equipamentos registados.\n")
+        pausar();
+        return;
+    }
+
+    /*
+     * Pergunta ao utilizador qual o codigo do equipamento a remover,
+     * e depois percorre a lista ligada para encontrar o equipamento com o codigo correspondente.
+     */
+
+    int codigo = lerInteiro("Insira o codigo do equipamento a remover", 1, s->proximoCodigoEquip);
+
+    /* Se esse equipamento tiver um incidente pendente,
+     * vai ser avisado ao utilizador que não consegue remover o mesmo
+     */
+
+    if (temIncidentePendente(s, codigo))
+    {
+        printf("\n [!] Não é possível remover o equipamento, pois existem incidentes pendentes associados a ele.\n");
+        pausar();
+        return;
+    }
+
+    /*
+     * Procura o codigo do equipamento e realiza a pesquisa na lista ligada, se encontrar o equipamento,
+     * remove o mesmo da lista ligada e libera a memoria alocada.
+     */
+
+    NodeEquipamento *atual = s->equipamentos;
+    NodeEquipamento *anterior = NULL;
+
+    while (atual != NULL && atual->dados.codigo != codigo)
+    {
+        anterior = atual;
+        atual = atual->proximo;
+    }
+
+    if (atual == NULL)
+    {
+        printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
+        pausar();
+        return;
+    }
+
+    printf("\n Equipamento encontrado: %s\n", atual->dados.nome);
+    int conf = lerInteiro("Tem a certeza que deseja remover este equipamento? (1-Sim, 2-Nao)", 1, 2);
+    if (conf != 1)
+    {
+        printf("\n Remocao cancelada.\n");
+        pausar();
+        return;
+    }
+
+    if (atual->proximo == NULL)
+        s->equipamentos = atual->proximo;
+    else
+        anterior->proximo = atual->proximo;
+
+    printf("\n [OK] Equipamento encontrado com sucesso.\n");
+    pausar();
 }
+

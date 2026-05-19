@@ -405,12 +405,27 @@ void pesquisarEquipamento(Sistema *s)
 //9. Guardar e carregar o inventário para um ficheiro
 void guardarInventario(Sistema *s)
 {
-    limparEcra();
-
-    int opcao = lerInteiro("Selecione a opção\n1. Guardar Inventário\n2. Carrgar Inventário\n", 1, 2);
-
-    if (opcao == 1)
+    FILE *file = fopen("inventario.dat", "wb");
+    if (file == NULL)
     {
-        
+        printf("\n [!] Erro ao abrir o ficheiro para guardar o inventário.\n");
+        return;
     }
+
+    // Escreve o número total de equipamentos
+    fwrite(&s->totalEquipamentos, sizeof(int), 1, file);
+    fwrite(&s->totalIncidentes, sizeof(int), 1, file);
+    fwrite(&s->proximoCodigoEquip, sizeof(int), 1, file);
+    fwrite(&s->proximoCodigoInc, sizeof(int), 1, file);
+
+    // Escreve cada equipamento
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        fwrite(&atual->dados, sizeof(Equipamento), 1, file);
+        atual = atual->proximo;
+    }
+
+    fclose(file);
+    printf("\n [OK] Inventário guardado com sucesso em \"inventario.dat\".\n");
 }

@@ -4,6 +4,95 @@
 
 #include "noc.h"
 
+// ================= MENU EQUIPAMENTOS =================
+
+void menuEquipamentos(Sistema *s)
+{
+    int opcao;
+
+    do
+    {
+        printf("===============================================================================================\n");
+        printf("                              MODULO 1 - GESTAO DE EQUIPAMENTOS                               \n");
+        printf("===============================================================================================\n");
+        printf("1. Adicionar um novo equipamento de rede.                                                      \n");
+        printf("2. Remover um equipamento (sem incidentes pendentes).                                         \n");
+        printf("3. Alterar os dados de um equipamento.                                                        \n");
+        printf("4. Alterar o estado de um equipamento (Operacional, Em Falha, Em Manutencao, Desativado).     \n");
+        printf("5. Listar todos os equipamentos.                                                              \n");
+        printf("6. Listar equipamentos por tipo.                                                              \n");
+        printf("7. Listar equipamentos por estado.                                                           \n");
+        printf("8. Pesquisar equipamento por codigo, IP ou MAC.                                              \n");
+        printf("9. Guardar e carregar inventario em ficheiro binario.                                        \n");
+        printf("10. Outras atividades relevantes.                                                            \n");
+        printf("-----------------------------------------------------------------------------------------------\n");
+        printf("0. Voltar                                                                                      \n");
+        printf("===============================================================================================\n");
+        printf("Opcao: ");
+
+        if (scanf("%d", &opcao) != 1)
+        {
+            printf("Entrada invalida!\n");
+            limparBuffer();
+            continue;
+        }
+
+        limparBuffer();
+
+        switch (opcao)
+        {
+            case 1:
+                adicionarEquipamento(s);
+                break;
+
+            case 2:
+                removerEquipamento(s);
+                break;
+
+            case 3:
+                alterarEquipamento(s);
+                break;
+
+            case 4:
+                alterarEstado(s);
+                break;
+
+            case 5:
+                listarEquipamentos(s);
+                break;
+
+            case 6:
+                listarPorTipo(s);
+                break;
+
+            case 7:
+                listarPorEstado(s);
+                break;
+
+            case 8:
+                pesquisarEquipamento(s);
+                break;
+
+            case 9:
+                guardarInventario(s);
+                break;
+
+            case 10:
+                outrasAtividadesRelevantes(s);
+                break;
+
+            case 0:
+                printf("A voltar...\n");
+                break;
+
+            default:
+                printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 0);
+}
+
+// ================= Funcoes do Modulo 1 =================
 // 1. Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
@@ -11,36 +100,38 @@ void adicionarEquipamento(Sistema *s)
 
     printf("Adicionar Equipamento\n");
 
-    printf("Insira o nome do equipamento: ");
-
     // Invoca um novo indice para o array da memoria alocada
     Equipamento novo;
     memset(&novo, 0, sizeof(Equipamento));
     novo.codigo = s->proximoCodigoEquip;
 
-    // Identifica do equipamento
-    lerString("Insira o nome do Equipamento",novo.nome,MAX_NOME);
+    // Identificação do equipamento
+    lerString("Insira o nome do Equipamento", novo.nome, MAX_NOME);
 
-    printf("Qual e o tipo de equipamento?");
+    printf("\nQual e o tipo de equipamento:\n");
     novo.tipo = selecionarTipo();
 
-    lerString("Qual é a marca do equipamento?",novo.marca,MAX_MARCA);
-    lerString("Qual é o modelo do equipamento?",novo.marca,MAX_MODELO);
+    lerString("Qual e a marca do equipamento", novo.marca, MAX_MARCA);
+    lerString("Qual e o modelo do equipamento", novo.modelo, MAX_MODELO);
 
-    lerString("Qual é o IP do equipamento?",novo.ip,MAX_IP);
-    lerString("Qual é o MAC do equipamento?",novo.mac,MAX_MAC);
-    lerString("Qual é a localização do equipamento?",novo.localizacao,MAX_LOCAL);
+    lerString("Qual e o IP do equipamento", novo.ip, MAX_IP);
+    lerString("Qual e o MAC do equipamento", novo.mac, MAX_MAC);
 
-    printf("Qual é o estado operacional do equipamento?");
+    lerString("Qual e a localizacao do equipamento", novo.localizacao, MAX_LOCAL);
+
+    printf("\nQual e o estado operacional do equipamento\n");
     novo.estado = selecionarEstado();
+
     obterDataAtual(novo.dataUltimaVerificacao);
 
     NodeEquipamento *novoNode = (NodeEquipamento *)malloc(sizeof(NodeEquipamento));
     if (novoNode == NULL)
     {
-        printf("Erro ao alocar memoria");
+        printf("Erro ao alocar memoria\n");
+        pausar();
         return;
     }
+
     novoNode->dados = novo;
     novoNode->proximo = s->equipamentos;
     s->equipamentos = novoNode;
@@ -48,7 +139,9 @@ void adicionarEquipamento(Sistema *s)
     s->totalEquipamentos++;
     s->proximoCodigoEquip++;
 
-    printf("[OK] Equipamento \"%s\" adicionado com sucesso, com codigo %d\n", novo.nome, novo.codigo);
+    printf("\n[OK] Equipamento \"%s\" adicionado com sucesso, com codigo %d\n",
+           novo.nome, novo.codigo);
+
     pausar();
 }
 
@@ -65,7 +158,7 @@ void removerEquipamento(Sistema *s)
 
     if (s->equipamentos == NULL)
     {
-        printf("\n [!] Não existem equipamentos registados.\n")
+        printf("\n [!] Não existem equipamentos registados.\n");
         pausar();
         return;
     }
@@ -87,6 +180,8 @@ void removerEquipamento(Sistema *s)
         pausar();
         return;
     }
+    
+    
 
     /*
      * Procura o codigo do equipamento e realiza a pesquisa na lista ligada, se encontrar o equipamento,
@@ -302,9 +397,9 @@ void listarPorTipo(Sistema *s)
 
     if (count == 0)
     {
-        printf("\n [!] Não existem equipamentos do tipo \"%s\" encontrado.\n");
-        tipoToString(tipo);
+        printf("\n [!] Não existem equipamentos do tipo \"%s\" encontrado.\n", tipoToString(tipo));
     }
+
     printf("\n Total de equipamentos do tipo \"%s\": %d\n", tipoToString(tipo), count);
     pausar();
 }
@@ -354,16 +449,17 @@ void pesquisarEquipamento(Sistema *s)
     printf("Pesquisar Equipamento\n");
 
     printf("Pesquisar por:\n1. Código\n2. Endereço IP\n3. Endereço MAC\n");
-    int opcao = lerInteiro("Selecione a opção de pesquisa", 1,3);
+
+    int opcao = lerInteiro("Selecione a opção de pesquisa", 1, 3);
 
     if (opcao == 1)
     {
-        int codigo = lerInteiro("Insira o codigo do equipamento a pesquisar", 1, s->proximoCodigoEquip);
+        int codigo = lerInteiro("Insira o codigo do equipamento a pesquisar", 1, 1000000);
+
         NodeEquipamento *no = encontrarPorCodigo(s, codigo);
+
         if (no == NULL)
-        {
             printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
-        }
         else
         {
             imprimirCabecalho();
@@ -372,13 +468,13 @@ void pesquisarEquipamento(Sistema *s)
     }
     else if (opcao == 2)
     {
-        char ip[MAX_DESC];
-        lerString("Insira o endereco IP do equipamento a pesquisar", ip, MAX_DESC);
+        char ip[MAX_IP];
+        lerString("Insira o endereco IP do equipamento a pesquisar", ip, MAX_IP);
+
         NodeEquipamento *no = encontrarPorIP(s, ip);
+
         if (no == NULL)
-        {
             printf("\n [!] Equipamento com endereco IP \"%s\" nao encontrado.\n", ip);
-        }
         else
         {
             imprimirCabecalho();
@@ -387,13 +483,13 @@ void pesquisarEquipamento(Sistema *s)
     }
     else if (opcao == 3)
     {
-        char mac[MAX_DESC];
-        lerString("Insira o endereco MAC do equipamento a pesquisar", mac, MAX_DESC);
+        char mac[MAX_MAC];
+        lerString("Insira o endereco MAC do equipamento a pesquisar", mac, MAX_MAC);
+
         NodeEquipamento *no = encontrarPorMAC(s, mac);
+
         if (no == NULL)
-        {
             printf("\n [!] Equipamento com endereco MAC \"%s\" nao encontrado.\n", mac);
-        }
         else
         {
             imprimirCabecalho();
@@ -401,16 +497,17 @@ void pesquisarEquipamento(Sistema *s)
         }
     }
 }
-
-//9. Guardar e carregar o inventário para um ficheiro
 void guardarInventario(Sistema *s)
 {
     limparEcra();
 
-    int opcao = lerInteiro("Selecione a opção\n1. Guardar Inventário\n2. Carrgar Inventário\n", 1, 2);
+    int opcao = lerInteiro(
+        "Selecione a opção\n1. Guardar Inventário\n2. Carregar Inventário\n", 1, 2);
 
     if (opcao == 1)
     {
         
     }
+
+    (void)s;
 }

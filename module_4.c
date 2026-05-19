@@ -20,7 +20,7 @@ static void limparEcraLocal(void) {
 
 // ================= MENU INCIDENTES =================
 
-void menuIncidentes(Sistema *s) {
+void menuIncidente(Sistema *s) {
 
     int opcao;
     char entidadeId[50];

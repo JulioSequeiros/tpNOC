@@ -57,7 +57,7 @@ int main() {
 
             case 1:
                 printf("Modulo 1 - Inventario (em desenvolvimento)\n");
-                // menuInventario(&sistema);
+                menuEquipamentos(&sistema);
                 break;
 
             case 2:
@@ -70,7 +70,7 @@ int main() {
                 break;
 
             case 4:
-                menuIncidentes(&sistema);
+                menuIncidente(&sistema);
                 break;
 
             case 5:

@@ -1,98 +1,78 @@
 #include "noc.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#include <time.h>
 
 
-// ================= PROTÓTIPOS =================
+// ============================================================
+//  MENU PRINCIPAL
+// ============================================================
 
-void limparBuffer();
-void carregarFicheiro(Sistema *s);
-void guardarFicheiro(const Sistema *s);
-
-// menus (assumidos existentes)
-void menuConectividade(Sistema *s);
-void menuIncidentes(Sistema *s);
-void menuRelatorios(Sistema *s);
-
-// ================= MAIN =================
-
-int main() {
-    setlocale(LC_ALL, "");
-
+void menuPrincipal(Sistema *s)
+{
     int opcao;
+    do
+    {
+        limparEcra();
+        printf("\n  ╔══════════════════════════════════════╗\n");
+        printf("  ║   NOC — Network Operations Center   ║\n");
+        printf("  ╠══════════════════════════════════════╣\n");
+        printf("  ║  1. Inventário de Equipamentos  [M1] ║\n");
+        printf("  ║  2. Conectividade               [M2] ║\n");
+        printf("  ║  3. Sensores                    [M3] ║\n");
+        printf("  ║  4. Incidentes                  [M4] ║\n");
+        printf("  ║  5. Configurações               [M5] ║\n");
+        printf("  ║  6. Relatórios                  [M6] ║\n");
+        printf("  ║  7. Ficheiros                        ║\n");
+        printf("  ║  0. Sair                             ║\n");
+        printf("  ╚══════════════════════════════════════╝\n");
+        printf("  Equipamentos: %-4d  Incidentes: %-4d  Configurações: %d\n",
+               s->totalEquipamentos, s->totalIncidentes, s->totalConfiguracoes);
 
-    Sistema sistema = {0};
-
-    printf("A iniciar sistema...\n");
-    carregarFicheiro(&sistema);
-
-    do {
-        printf("\n============================================\n");
-        printf("   SISTEMA MINI NOC - MENU PRINCIPAL\n");
-        printf("============================================\n");
-        printf("  1. Modulo 1 - Inventario de Equipamentos\n");
-        printf("  2. Modulo 2 - Testes de Conectividade\n");
-        printf("  3. Modulo 3 - Monitorizacao de Sensores\n");
-        printf("  4. Modulo 4 - Incidentes Tecnicos\n");
-        printf("  5. Modulo 5 - Configuracoes\n");
-        printf("  6. Modulo 6 - Relatorios\n");
-        printf("--------------------------------------------\n");
-        printf("  0. Sair\n");
-        printf("============================================\n");
-
-        printf("Opcao: ");
-
-        if (scanf("%d", &opcao) != 1) {
-            printf("Entrada invalida!\n");
-            limparBuffer();   // limpa input inválido
-            continue;
+        opcao = lerInteiro("  Opção: ", 0, 7);
+        switch (opcao)
+        {
+            case 1: menuEquipamento(s);    break;
+            // case 2: menuConectividade(s);  break;
+            // case 3: menuSensores(s);       break;
+            // case 4: menuIncidentes(s);     break;
+            // case 5: menuConfiguracoes(s);  break;
+            // case 6: menuRelatorios(s);     break;
+            // case 7: menuFicheiro(s);       break;
+            case 0: break;
         }
+    } while (opcao != 0);
+}
 
-        limparBuffer(); // evita lixo no buffer após input válido
+// ============================================================
+//  MAIN
+// ============================================================
 
-        switch(opcao) {
+int main(void)
+{
+    Sistema s;
+    memset(&s, 0, sizeof(Sistema));
 
-            case 1:
-                printf("Modulo 1 - Inventario (em desenvolvimento)\n");
-                menuEquipamentos(&sistema);
-                break;
+    // Inicializar contadores
+    s.proximoCodigoEquip = 1;
+    s.proximoCodigoInc   = 1;
+    s.proximoCodigoCfg   = 1;
 
-            case 2:
-                menuConectividade(&sistema);
-                break;
+    menuPrincipal(&s);
 
-            case 3:
-                printf("Modulo 3 - Sensores (em desenvolvimento)\n");
-                // menuSensores(&sistema);
-                break;
+    // Libertar memória — equipamentos
+    NodeEquipamento *eq = s.equipamentos;
+    while (eq) { NodeEquipamento *tmp = eq->proximo; free(eq); eq = tmp; }
 
-            case 4:
-                menuIncidente(&sistema);
-                break;
+    // Libertar memória — sensores
+    NodeSensor *sen = s.sensores;
+    while (sen) { NodeSensor *tmp = sen->proximo; free(sen); sen = tmp; }
 
-            case 5:
-                printf("Modulo 5 - Configuracoes (em desenvolvimento)\n");
-                // menuConfiguracoes(&sistema);
-                break;
+    // Libertar memória — incidentes
+    NodeIncidente *inc = s.incidentes;
+    while (inc) { NodeIncidente *tmp = inc->proximo; free(inc); inc = tmp; }
 
-            case 6:
-                menuRelatorios(&sistema);
-                break;
+    // Libertar memória — pilha de configurações
+    NodeConfiguracao *cfg = s.pilhaConfiguracoes.topo;
+    while (cfg) { NodeConfiguracao *tmp = cfg->proximo; free(cfg); cfg = tmp; }
 
-            case 0:
-                printf("\nA guardar dados...\n");
-                guardarFicheiro(&sistema);
-                printf("Ate breve!\n");
-                break;
-
-            default:
-                printf("\nOpcao invalida!\n");
-        }
-
-    } while(opcao != 0);
-
+    printf("  Até logo!\n\n");
     return 0;
 }

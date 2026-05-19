@@ -1,0 +1,13 @@
+# LISTA DE SENSORES - SISTEMA NOC
+# formato: ID;TIPO;LOCALIZACAO;VALOR;UNIDADE;ESTADO
+
+1;Temperatura;Sala Servidores;24.5;C;OK
+2;Temperatura;Router TP-Link;38.2;C;ALERTA
+3;Humidade;Sala Servidores;45;%;OK
+4;CPU;Servidor Principal;62;%;OK
+5;CPU;Switch Core;78;%;ALERTA
+6;Rede;Gateway 192.168.1.1;12;ms;OK
+7;Rede;Servidor DNS;25;ms;OK
+8;Disco;Servidor Principal;85;%;CRITICO
+9;Energia;UPS Principal;230;V;OK
+10;Energia;Rack Secundario;215;V;ALERTA

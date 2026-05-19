@@ -12,7 +12,7 @@
 #define MAX_MARCA 30
 #define MAX_MODELO 30
 #define MAX_IP 16
-#define MAX_LOCAL 50
+#define MAX_LOCAL 80
 #define MAX_MAC 18
 #define MAX_DATA 20
 #define MAX_DESC 100
@@ -109,9 +109,24 @@ typedef struct {
 
 } Sistema;
 
-/* ================= UTIL ================= */
+/* ================= PROTOTIPOS AUXILIARES ================= */
+TipoEquipamento selecionarTipo(void);
+EstadoEquipamento selecionarEstado(void);
+int temIncidentePendente(Sistema *s, int codigo);
+NodeEquipamento *encontrarPorCodigo(Sistema *s, int codigo);
+void imprimirEquipamento(Equipamento *e);
+const char *estadoEquipamentoToString(EstadoEquipamento estado);
+const char *tipoToString(TipoEquipamento t);
+NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip);
+NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac);
 
+
+
+/* ================= UTIL ================= */
+void imprimirCabecalho(void);
 void obterDataAtual(char *data);
+void limparEcra(void);
+void pausar(void);
 
 void limparBuffer(void);
 void limparBufferLocal(void);
@@ -121,22 +136,38 @@ int lerInteiro(const char *prompt, int min, int max);
 void lerString(const char *prompt, char *dest, int maxLen);
 
 
-/* ================= MENUS ================= */
-
+// ========== MENU PRINCIPAL =================//
 void menuPrincipal(Sistema *s);
-void menuEquipamento(Sistema *s);
+void menuEquipamentos(Sistema *s);
 void menuConectividade(Sistema *s);
-void menuIncidentes(Sistema *s);
+void menuIncidente(Sistema *s);
 void menuRelatorios(Sistema *s);
+void menuFicheiro(Sistema *s);
+void menuEstatistica(const Sistema *s);   
+void menuSair(void);
+
+
+
+
+
 
 
 /* ================= MODULO 1 - (VAZIO) ================= */
-
+void adicionarEquipamento(Sistema *s);
+void removerEquipamento(Sistema *s);
+void alterarEquipamento(Sistema *s);
+void alterarEstado(Sistema *s);
+void listarEquipamentos(Sistema *s);
+void listarPorTipo(Sistema *s);
+void listarPorEstado(Sistema *s);
+void pesquisarEquipamento(Sistema *s);
+void guardarInventario(Sistema *s);
 
 
 /* ================= MODULO 2 - CONECTIVIDADE ================= */
 
 void executarPingEquipamento(Sistema *s);
+void criarIncidenteAutomatico(Sistema *s);
 void guardarResultadoPing(Sistema *s);
 void verificarRespostaPing(Sistema *s);
 void atualizarDataVerificacao(Sistema *s);
@@ -147,6 +178,11 @@ void pingGeral(Sistema *s);
 void mostrarFerramentasExtras(Sistema *s);
 
 /* ================= MODULO 3 - (VAZIO) ================= */
+
+
+
+
+
 
 
 

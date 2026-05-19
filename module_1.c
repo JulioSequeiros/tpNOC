@@ -4,6 +4,13 @@
 
 #include "noc.h"
 
+
+/*
+ *
+ * Parte Logica do modulo 1
+ *
+ */
+
 // 1. Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
@@ -405,27 +412,34 @@ void pesquisarEquipamento(Sistema *s)
 //9. Guardar e carregar o inventário para um ficheiro
 void guardarInventario(Sistema *s)
 {
-    FILE *file = fopen("inventario.dat", "wb");
-    if (file == NULL)
+    FILE *f = fopen(FICHEIRO_DAT, "wb");
+    if (f == NULL)
     {
-        printf("\n [!] Erro ao abrir o ficheiro para guardar o inventário.\n");
+        printf("\n [!] Não foi possível abrir o ficheiro para escrita.\n");
         return;
     }
 
     // Escreve o número total de equipamentos
-    fwrite(&s->totalEquipamentos, sizeof(int), 1, file);
-    fwrite(&s->totalIncidentes, sizeof(int), 1, file);
-    fwrite(&s->proximoCodigoEquip, sizeof(int), 1, file);
-    fwrite(&s->proximoCodigoInc, sizeof(int), 1, file);
+    fwrite(&s->totalEquipamentos, sizeof(int), 1, f);
+    fwrite(&s->totalIncidentes, sizeof(int), 1, f);
+    fwrite(&s->proximoCodigoEquip, sizeof(int), 1, f);
+    fwrite(&s->proximoCodigoInc, sizeof(int), 1, f);
 
     // Escreve cada equipamento
-    NodeEquipamento *atual = s->equipamentos;
-    while (atual != NULL)
+    NodeEquipamento *eq = s->equipamentos;
+    while (eq != NULL)
     {
-        fwrite(&atual->dados, sizeof(Equipamento), 1, file);
-        atual = atual->proximo;
+        fwrite(&eq->dados, sizeof(Equipamento), 1, f);
+        eq = eq->proximo;
     }
 
-    fclose(file);
-    printf("\n [OK] Inventário guardado com sucesso em \"inventario.dat\".\n");
+    NodeIncidente *inc = s->incidentes;
+    while (inc != NULL)
+    {
+        fwrite(&inc->dados, sizeof(Incidente), 1, f);
+        inc = inc->proximo;
+    }
+
+    fclose(f);
+    printf("\n [OK] Inventário guardado com sucesso em \"%s\".\n",FICHEIRO_DAT);
 }

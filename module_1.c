@@ -4,23 +4,212 @@
 
 #include "noc.h"
 
+/*
+ * UTIL
+ */
+
+void obterDataAtual(char *data)
+{
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    strftime(data, MAX_DATA, "%d-%m-%Y", tm_info);
+}
+
+void obterDataHoraAtual(char *data)
+{
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    strftime(datahora, MAX_DATAHORA, "%d-%m-%Y %H:%M:%S", tm_info);
+}
+
+void limparBuffer(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int lerInteiro(char *text, int min, int max)
+{
+    int valor;
+    char lixo;
+
+    while (1)
+    {
+        printf("%s: ", prompt);
+        if (scanf("%d%c", &valor, &lixo) == 2 && lixo == '\n'
+            && valor >= min && valor <= max)
+        {
+            return valor;
+        }
+        limparBuffer();
+        printf("  [!] Valor inválido. Introduza um número entre %d e %d.\n", min, max);
+    }
+}
+
+void lerString(const char *prompt, char *dest, int maxLen)
+{
+    while (1)
+    {
+        printf("%s: ", prompt);
+        if (fgets(dest, maxLen, stdin) != NULL)
+        {
+            size_t len = strlen(dest);
+            if ( len > 0 && dest[len - 1] == '\n')
+            {
+                dest[len - 1] = '\0';
+            }
+            if (strlen(dest) > 0)
+            {
+                return;
+            }
+        }
+        printf("  [!] Campo obrigatório. Tente novamente.\n");
+    }
+}
+
+const char *tipoToString(TipoEquipamento tipo)
+{
+    switch (tipo)
+    {
+    case ROUTER:          return "Router";
+    case SWITCH_L2:       return "Switch L2";
+    case ACESS_POINT:     return "Access Point";
+    case SERVIDOR_NAS:    return "Servidor/NAS";
+    case IMPRESSORA_REDE: return "Impressora de Rede";
+    case CAMERA_IP:       return "Câmara IP";
+    case SENSOR:          return "Sensor";
+    case UPS:             return "UPS";
+    default:              return "Desconhecido";
+    }
+}
+
+const char *estadoEquipamentoToString(EstadoEquipamento estado)
+{
+    switch (estado)
+    {
+    case OPERACIONAL:    return "Operacional";
+    case EM_FALHA:       return "Em Falha";
+    case EM_MANUTENCAO:  return "Em Manutenção";
+    case DESATIVADO:     return "Desativado";
+    default:             return "Desconhecido";
+    }
+}
+
+const char *estadoIncidenteToString(EstadoIncidente estado)
+{
+    switch (estado)
+    {
+    case INC_PENDENTE:  return "Pendente";
+    case INC_EM_CURSO:  return "Em Curso";
+    case INC_CONCLUIDO: return "Concluído";
+    default:            return "Desconhecido";
+    }
+}
+
+const char *estadoSensorToString(EstadoSensor estado)
+{
+    switch (estado)
+    {
+    case SENSOR_NORMAL:    return "Normal";
+    case SENSOR_AVISO:     return "Aviso";
+    case SENSOR_CRITICO:   return "Crítico";
+    case SENSOR_FALHA_REDE:return "Falha Rede";
+    default:               return "Desconhecido";
+    }
+}
+
+TipoEquipamento selecionarTipo(void)
+{
+    printf("\n  Tipos de Equipamento:\n");
+    printf("  1. Router\n");
+    printf("  2. Switch L2\n");
+    printf("  3. Access Point\n");
+    printf("  4. Servidor/NAS\n");
+    printf("  5. Impressora de Rede\n");
+    printf("  6. Câmara IP\n");
+    printf("  7. Sensor\n");
+    printf("  8. UPS\n");
+    return (TipoEquipamento) lerInteiro("  Opção: ", 1, 8);
+}
+
+EstadoEquipamento selecionarEstado(void)
+{
+    printf("\n  Estados disponíveis:\n");
+    printf("  1. Operacional\n");
+    printf("  2. Em Falha\n");
+    printf("  3. Em Manutenção\n");
+    printf("  4. Desativado\n");
+    return (EstadoEquipamento) lerInteiro("  Opção: ", 1, 4);
+}
+
+void limparEcra(void)
+{
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+void pausar(void)
+{
+    printf("\n  Prima ENTER para continuar...");
+    limparBuffer();
+}
 
 /*
- *
- * Parte Logica do modulo 1
- *
+ * Prints
+ */
+
+void imprimirCabecalho(void)
+{
+    printf("\n  %-6s %-20s %-18s %-15s %-16s %-18s %-17s %-16s\n",
+           "Cód.", "Nome", "Tipo", "Marca",
+           "IP", "MAC", "Localização", "Estado");
+    printf("  ");
+    for (int i = 0; i < 128; i++) printf("-");
+    printf("\n");
+}
+
+void imprimirEquipamento(const Equipamento *e)
+{
+    printf("  %-6d %-20s %-18s %-15s %-16s %-18s %-17s %-16s\n",
+           e->codigo, e->nome, tipoToString(e->tipo), e->marca,
+           e->ip, e->mac, e->localizacao,
+           estadoEquipamentoToString(e->estado));
+}
+
+static void imprimirFichaEquipamento(const Equipamento *e)
+{
+    printf("\n  ╔══════════════════════════════════════════════════╗\n");
+    printf("  ║           FICHA DE EQUIPAMENTO                  ║\n");
+    printf("  ╚══════════════════════════════════════════════════╝\n");
+    printf("  Código            : %d\n",  e->codigo);
+    printf("  Nome              : %s\n",  e->nome);
+    printf("  Tipo              : %s\n",  tipoToString(e->tipo));
+    printf("  Marca             : %s\n",  e->marca);
+    printf("  Modelo            : %s\n",  e->modelo);
+    printf("  Endereço IP       : %s\n",  e->ip);
+    printf("  Endereço MAC      : %s\n",  e->mac);
+    printf("  Localização       : %s\n",  e->localizacao);
+    printf("  Estado            : %s\n",  estadoEquipamentoToString(e->estado));
+    printf("  Última verificação: %s\n",  e->dataUltimaVerificacao);
+    printf("  ────────────────────────────────────────────────────\n");
+}
+
+/*
+ * Operação Logica
  */
 
 // 1. Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
     limparEcra();
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    ADICIONAR NOVO EQUIPAMENTO\n");
+    printf("  ══════════════════════════════════════\n");
 
-    printf("Adicionar Equipamento\n");
-
-    printf("Insira o nome do equipamento: ");
-
-    // Invoca um novo indice para o array da memoria alocada
+    // Invoca um novo indice para o array na memória alocada
     Equipamento novo;
     memset(&novo, 0, sizeof(Equipamento));
     novo.codigo = s->proximoCodigoEquip;
@@ -51,7 +240,6 @@ void adicionarEquipamento(Sistema *s)
     novoNode->dados = novo;
     novoNode->proximo = s->equipamentos;
     s->equipamentos = novoNode;
-
     s->totalEquipamentos++;
     s->proximoCodigoEquip++;
 
@@ -63,7 +251,9 @@ void adicionarEquipamento(Sistema *s)
 void removerEquipamento(Sistema *s)
 {
     limparEcra();
-    printf("Remover Equipamento\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    REMOVER EQUIPAMENTO\n");
+    printf("  ══════════════════════════════════════\n");
 
     /*
      * Realiza um check automatico na lista ligada se tem algum equipamento alocado,
@@ -72,9 +262,8 @@ void removerEquipamento(Sistema *s)
 
     if (s->equipamentos == NULL)
     {
-        printf("\n [!] Não existem equipamentos registados.\n")
-        pausar();
-        return;
+        printf("\n [!] Não existem equipamentos registados.\n");
+        pausar();return;
     }
 
     /*
@@ -82,7 +271,7 @@ void removerEquipamento(Sistema *s)
      * e depois percorre a lista ligada para encontrar o equipamento com o codigo correspondente.
      */
 
-    int codigo = lerInteiro("Insira o codigo do equipamento a remover", 1, s->proximoCodigoEquip);
+    int codigo = lerInteiro("Insira o codigo do equipamento a remover", 1, s->proximoCodigoEquip - 1);
 
     /* Se esse equipamento tiver um incidente pendente,
      * vai ser avisado ao utilizador que não consegue remover o mesmo
@@ -91,8 +280,7 @@ void removerEquipamento(Sistema *s)
     if (temIncidentePendente(s, codigo))
     {
         printf("\n [!] Não é possível remover o equipamento, pois existem incidentes pendentes associados a ele.\n");
-        pausar();
-        return;
+        pausar();return;
     }
 
     /*
@@ -102,7 +290,6 @@ void removerEquipamento(Sistema *s)
 
     NodeEquipamento *atual = s->equipamentos;
     NodeEquipamento *anterior = NULL;
-
     while (atual != NULL && atual->dados.codigo != codigo)
     {
         anterior = atual;
@@ -112,8 +299,7 @@ void removerEquipamento(Sistema *s)
     if (atual == NULL)
     {
         printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
-        pausar();
-        return;
+        pausar();return;
     }
 
     printf("\n Equipamento encontrado: %s\n", atual->dados.nome);
@@ -130,6 +316,8 @@ void removerEquipamento(Sistema *s)
     else
         anterior->proximo = atual->proximo;
 
+    free(atual);
+    s->totalEquipamentos--;
     printf("\n [OK] Equipamento encontrado com sucesso.\n");
     pausar();
 }
@@ -138,12 +326,14 @@ void removerEquipamento(Sistema *s)
 void alterarEquipamento(Sistema *s)
 {
     limparEcra();
-    printf("Alterar Dados de Equipamento\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    ALTERAR DADOS DE EQUIPAMENTO\n");
+    printf("  ══════════════════════════════════════\n");
 
     /*
      * Pergunta ao utilizador o codigo do equipamento que quer alterar os dados
      */
-    int codigo = lerInteiro("Insira o codigo do equipamento a alterar", 1, s->proximoCodigoEquip);
+    int codigo = lerInteiro("Insira o codigo do equipamento a alterar", 1, s->proximoCodigoEquip - 1);
 
     /*
      * Procura na lista ligada, se esse codigo do equipamento e existente,
@@ -153,8 +343,7 @@ void alterarEquipamento(Sistema *s)
     if (no == NULL)
     {
         printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
-        pausar();
-        return;
+        pausar();return;
     }
 
     /*
@@ -167,7 +356,7 @@ void alterarEquipamento(Sistema *s)
 
     char buffer[MAX_DESC];
 
-    printf(" Nome ['\%s\']: ", e->nome);
+    printf(" Nome [%s]: ", e->nome);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -175,13 +364,10 @@ void alterarEquipamento(Sistema *s)
         strncpy(e->nome, buffer, MAX_DESC - 1);
     }
 
-    int altTipo = lerInteiro(" Alterar tipo? (1-Sim, 2-Nao)", 1, 2);
-    if (altTipo == 1)
-    {
+    if (lerInteiro(" Alterar tipo? (1-Sim, 2-Nao)", 1, 2) == 1)
         e->tipo = selecionarTipo();
-    }
 
-    printf(" Marca [\"%s\"]: ", e->marca);
+    printf(" Marca [%s]: ", e->marca);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -189,7 +375,15 @@ void alterarEquipamento(Sistema *s)
         strncpy(e->marca, buffer, MAX_DESC - 1);
     }
 
-    printf(" Endereço IP ['\%s\']: ", e->ip);
+    printf("  Modelo [%s]: ", e->modelo);
+    fgets(buffer, MAX_MODELO, stdin);
+    if (buffer[0] != '\n')
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        strncpy(e->modelo, buffer, MAX_MODELO - 1);
+    }
+
+    printf(" Endereço IP [%s]: ", e->ip);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -197,7 +391,7 @@ void alterarEquipamento(Sistema *s)
         strncpy(e->ip, buffer, MAX_DESC - 1);
     }
 
-    printf(" Endereço MAC ['\%s\']: ", e->mac);
+    printf(" Endereço MAC [%s]: ", e->mac);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -205,7 +399,7 @@ void alterarEquipamento(Sistema *s)
         strncpy(e->mac, buffer, MAX_DESC - 1);
     }
 
-    printf(" Localização ['\%s\']: ", e->localizacao);
+    printf(" Localização [%s]: ", e->localizacao);
     fgets(buffer, MAX_DESC, stdin);
     if (buffer[0] == '\n')
     {
@@ -223,12 +417,14 @@ void alterarEquipamento(Sistema *s)
 void alterarEstado(Sistema *s)
 {
     limparEcra();
-    printf("Alterar Estado de Equipamento\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    ALTERAR ESTADO DO EQUIPAMENTO\n");
+    printf("  ══════════════════════════════════════\n");
 
     /*
      * Pergunta ao utilizador o codigo do equipamento que quer alterar o estado
      */
-    int codigo = lerInteiro("Insira o codigo do equipamento a alterar o estado", 1, s->proximoCodigoEquip);
+    int codigo = lerInteiro("Insira o codigo do equipamento a alterar o estado", 1, s->proximoCodigoEquip - 1);
 
     /*
      * Procura na lista ligada, se esse codigo do equipamento e existente,
@@ -245,7 +441,7 @@ void alterarEstado(Sistema *s)
     printf("\n Equipamento: %s\n", no->dados.nome);
     printf("\n Estado atual: %s\n ", estadoEquipamentoToString(no->dados.estado));
     printf("\n Novo estado: \n");
-    no->dados.estado = selecionarTipo();
+    no->dados.estado = selecionarEstado();
     obterDataAtual(no->dados.dataUltimaVerificacao);
 
     printf("\n [OK] Estado do equipamento atualizado para \"%s\".\n", estadoEquipamentoToString(no->dados.estado));
@@ -253,16 +449,17 @@ void alterarEstado(Sistema *s)
 }
 
 // 5. Listar Todos os Equipamentos
-void listarEquipamentos(Sistema *s)
+void listarEquipamentos(const Sistema *s)
 {
     limparEcra();
-    printf("Lista de Equipamentos\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    LISTA DE TODOS OS EQUIPAMENTOS (%d)\n", s->totalEquipamentos);
+    printf("  ══════════════════════════════════════\n");
 
     if (s->equipamentos == NULL)
     {
         printf("\n [!] Não existem equipamentos registados.\n");
-        pausar();
-        return;
+        pausar();return;
     }
 
     imprimirCabecalho();
@@ -278,10 +475,12 @@ void listarEquipamentos(Sistema *s)
 }
 
 // 6. Listar por Tipo
-void listarPorTipo(Sistema *s)
+void listarPorTipo(const Sistema *s)
 {
     limparEcra();
-    printf("Listar Equipamentos por Tipo\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    LISTAR EQUIPAMENTOS POR TIPO\n");
+    printf("  ══════════════════════════════════════\n");
 
     if (s->equipamentos == NULL)
     {
@@ -317,10 +516,12 @@ void listarPorTipo(Sistema *s)
 }
 
 //7. Listar por Estado
-void listarPorEstado(Sistema *s)
+void listarPorEstado(const Sistema *s)
 {
     limparEcra();
-    printf("Listar Equipamentos por Estado\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    LISTAR EQUIPAMENTOS POR ESTADO\n");
+    printf("  ══════════════════════════════════════\n");
 
     if (s->equipamentos == NULL)
     {
@@ -329,7 +530,7 @@ void listarPorEstado(Sistema *s)
         return;
     }
 
-    printf("Selecione o estado de equipamento para listar:\n");
+    printf("Selecione o estado: ");
     EstadoEquipamento estado = selecionarEstado();
 
     imprimirCabecalho();
@@ -355,75 +556,86 @@ void listarPorEstado(Sistema *s)
 }
 
 //8. Pesquisar equipamento por codigo, IP, MAC
-void pesquisarEquipamento(Sistema *s)
+void pesquisarEquipamento(const Sistema *s)
 {
     limparEcra();
-    printf("Pesquisar Equipamento\n");
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    PESQUISAR EQUIPAMENTO\n");
+    printf("  ══════════════════════════════════════\n");
 
     printf("Pesquisar por:\n1. Código\n2. Endereço IP\n3. Endereço MAC\n");
     int opcao = lerInteiro("Selecione a opção de pesquisa", 1,3);
+    Equipamento *encontrado = NULL;
 
     if (opcao == 1)
     {
-        int codigo = lerInteiro("Insira o codigo do equipamento a pesquisar", 1, s->proximoCodigoEquip);
+        int codigo = lerInteiro("  Codigo: ", 1, s->proximoCodigoEquip - 1);
         NodeEquipamento *no = encontrarPorCodigo(s, codigo);
-        if (no == NULL)
+        if (no)
         {
-            printf("\n [!] Equipamento com codigo %d nao encontrado.\n", codigo);
-        }
-        else
-        {
-            imprimirCabecalho();
-            imprimirEquipamento(&no->dados);
+            encontrado = &no->dados;
         }
     }
-    else if (opcao == 2)
+    else
     {
-        char ip[MAX_DESC];
-        lerString("Insira o endereco IP do equipamento a pesquisar", ip, MAX_DESC);
-        NodeEquipamento *no = encontrarPorIP(s, ip);
-        if (no == NULL)
+        char termo[MAX_MAC];
+        if (opcao == 2)
         {
-            printf("\n [!] Equipamento com endereco IP \"%s\" nao encontrado.\n", ip);
+            lerString("  Endereço IP: ", termo, MAX_IP);
         }
-        else
+        lerString("  Endereço MAC: ", termo, MAX_MAC);
+
+        NodeEquipamento *atual = s->equipamentos;
+        while (atual != NULL)
         {
-            imprimirCabecalho();
-            imprimirEquipamento(&no->dados);
+            int match = (opcao == 2) ? (strcmp(atual->dados.ip, termo) == 0) : (strcmp(atual->dados.mac, termo) == 0);
+            if (match)
+            {
+                encontrado = &atual->dados;
+                break;
+            }
+            atual = atual->proximo;
         }
     }
-    else if (opcao == 3)
+
+    if (encontrado == NULL)
     {
-        char mac[MAX_DESC];
-        lerString("Insira o endereco MAC do equipamento a pesquisar", mac, MAX_DESC);
-        NodeEquipamento *no = encontrarPorMAC(s, mac);
-        if (no == NULL)
-        {
-            printf("\n [!] Equipamento com endereco MAC \"%s\" nao encontrado.\n", mac);
-        }
-        else
-        {
-            imprimirCabecalho();
-            imprimirEquipamento(&no->dados);
-        }
+        printf("\n [!] Equipamento não encontrado.\n");
     }
+    else
+    {
+        imprimirFichaEquipamento(encontrado);
+    }
+    pausar();
 }
 
-//9. Guardar e carregar o inventário para um ficheiro
-void guardarInventario(Sistema *s)
+NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo)
 {
-    FILE *f = fopen(FICHEIRO_DAT, "wb");
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (atual->dados.codigo == codigo)
+        {
+            return atual;
+        }
+        atual = atual->proximo;
+    }
+    return NULL;
+}
+
+//9. Guardar e carregar o ficheiro binario
+void guardarInventario(const Sistema *s)
+{
+    FILE *f = fopen(FICH_EQUIPAMENTOS, "wb");
     if (f == NULL)
     {
-        printf("\n [!] Não foi possível abrir o ficheiro para escrita.\n");
+        printf("\n [!] Não foi possível abrir %s.\n", FICH_EQUIPAMENTOS);
         return;
     }
 
     // Escreve o número total de equipamentos
     fwrite(&s->totalEquipamentos, sizeof(int), 1, f);
-    fwrite(&s->totalIncidentes, sizeof(int), 1, f);
     fwrite(&s->proximoCodigoEquip, sizeof(int), 1, f);
-    fwrite(&s->proximoCodigoInc, sizeof(int), 1, f);
 
     // Escreve cada equipamento
     NodeEquipamento *eq = s->equipamentos;
@@ -433,13 +645,117 @@ void guardarInventario(Sistema *s)
         eq = eq->proximo;
     }
 
-    NodeIncidente *inc = s->incidentes;
-    while (inc != NULL)
+    fclose(f);
+    printf("\n [OK] Equipamentos guardado com sucesso em \"%s\".\n",FICH_EQUIPAMENTOS);
+}
+
+void carregarFicheiro(Sistema *s)
+{
+    FILE *f = fopen(FICH_EQUIPAMENTOS, "rb");
+    if (f == NULL)
     {
-        fwrite(&inc->dados, sizeof(Incidente), 1, f);
-        inc = inc->proximo;
+        printf("\n  [!] \"%s\" não encontrado. A iniciar vazio.\n", FICH_EQUIPAMENTOS);
+        return;
+    }
+
+    int total = 0, proxCod = 1;
+    fread(&total, sizeof(int), 1, f);
+    fread(&proxCod, sizeof(int), 1, f);
+
+    s->totalEquipamentos = total;
+    s->proximoCodigoEquip = proxCod;
+
+    NodeEquipamento **ultimo = &s->equipamentos;
+    for (int i = 0; i < total; i++)
+    {
+        NodeEquipamento *no = (NodeEquipamento *)malloc(sizeof(NodeEquipamento));
+        if (no == NULL) break;
+        fread(&no->dados, sizeof(Equipamento), 1, f);
+        no->proximo = NULL;
+        *ultimo = no;
+        ultimo = &no->proximo;
     }
 
     fclose(f);
-    printf("\n [OK] Inventário guardado com sucesso em \"%s\".\n",FICHEIRO_DAT);
+    printf("\n  [OK] %d equipamento(s) carregado(s) de \"%s\".\n", total, FICH_EQUIPAMENTOS);
+}
+
+// 10. Stats geral do modulo
+
+void menuEstatisticos(Sistema *s)
+{
+    limparEcra();
+    printf("\n  ══════════════════════════════════════\n");
+    printf("    ESTATÍSTICAS DO INVENTÁRIO\n");
+    printf("  ══════════════════════════════════════\n");
+
+
+    int porTipo[9] = {0}, porEstado[5] = {0};
+
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        porTipo[atual->dados.tipo]++;
+        porEstado[atual->dados.estado]++;
+        atual = atual->proximo;
+    }
+
+    printf("\n Total de equipamentos : %d\n", s->totalEquipamentos);
+    printf("\n Total de incidentes : %d\n\n", s->totalIncidentes);
+
+    printf("\n Por tipo:\n");
+    for (int i = 1; i <= 8; i++)
+    {
+        if (porTipo[i] > 0)
+        {
+            printf(" %-20s : %d\n", tipoToString((TipoEquipamento)i), porTipo[i]);
+        }
+    }
+    printf("\n Por Estado:\n");
+    for (int i = 1; i <= 4; i++)
+    {
+        printf(" %-20s : %d\n", estadoEquipamentoToString((EstadoEquipamento)i), porEstado[i]);
+    }
+    pausar();
+}
+
+// Menu do Modulo
+
+void menuEquipamento(Sistema *s)
+{
+    int opcao;
+    do
+    {
+        limparEcra();
+        printf("\n  ╔══════════════════════════════════════╗\n");
+        printf("  ║    MÓDULO 1 — INVENTÁRIO             ║\n");
+        printf("  ╠══════════════════════════════════════╣\n");
+        printf("  ║  1. Adicionar equipamento            ║\n");
+        printf("  ║  2. Remover equipamento              ║\n");
+        printf("  ║  3. Alterar dados                    ║\n");
+        printf("  ║  4. Alterar estado                   ║\n");
+        printf("  ║  5. Listar todos                     ║\n");
+        printf("  ║  6. Listar por tipo                  ║\n");
+        printf("  ║  7. Listar por estado                ║\n");
+        printf("  ║  8. Pesquisar equipamento            ║\n");
+        printf("  ║  9. Estatísticas                     ║\n");
+        printf("  ║  0. Voltar                           ║\n");
+        printf("  ╚══════════════════════════════════════╝\n");
+
+        opcao = lerInteiro("  Opção: ", 0, 9);
+
+        switch (opcao)
+        {
+        case 1: adicionarEquipamento(s); break;
+        case 2: removerEquipamento(s);   break;
+        case 3: alterarEquipamento(s);   break;
+        case 4: alterarEstado(s);        break;
+        case 5: listarTodos(s);          break;
+        case 6: listarPorTipo(s);        break;
+        case 7: listarPorEstado(s);      break;
+        case 8: pesquisarEquipamento(s); break;
+        case 9: menuEstatistica(s);      break;
+        case 0: break;
+        }
+    } while (opcao != 0);
 }

@@ -1,6 +1,7 @@
 #ifndef TPNOC_NOC_H
 #define TPNOC_NOC_H
 
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

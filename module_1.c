@@ -15,20 +15,13 @@ void obterDataAtual(char *data)
     strftime(data, MAX_DATA, "%d-%m-%Y", tm_info);
 }
 
-void obterDataHoraAtual(char *data)
-{
-    time_t t = time(NULL);
-    struct tm *tm_info = localtime(&t);
-    strftime(datahora, MAX_DATAHORA, "%d-%m-%Y %H:%M:%S", tm_info);
-}
-
 void limparBuffer(void)
 {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-int lerInteiro(char *text, int min, int max)
+int lerInteiro(const char *prompt, int min, int max)
 {
     int valor;
     char lixo;
@@ -361,7 +354,8 @@ void alterarEquipamento(Sistema *s)
     if (buffer[0] == '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->nome, buffer, MAX_DESC - 1);
+        strncpy(e->nome, buffer, sizeof(e->nome) - 1);
+        e->nome[sizeof(e->nome) - 1] = '\0';
     }
 
     if (lerInteiro(" Alterar tipo? (1-Sim, 2-Nao)", 1, 2) == 1)
@@ -372,7 +366,8 @@ void alterarEquipamento(Sistema *s)
     if (buffer[0] == '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->marca, buffer, MAX_DESC - 1);
+        strncpy(e->marca, buffer, sizeof(e->marca) - 1);
+        e->marca[sizeof(e->marca) - 1] = '\0';
     }
 
     printf("  Modelo [%s]: ", e->modelo);
@@ -380,7 +375,8 @@ void alterarEquipamento(Sistema *s)
     if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->modelo, buffer, MAX_MODELO - 1);
+        strncpy(e->modelo, buffer, sizeof(e->modelo) - 1);
+        e->modelo[sizeof(e->modelo) - 1] = '\0';
     }
 
     printf(" Endereço IP [%s]: ", e->ip);
@@ -388,23 +384,26 @@ void alterarEquipamento(Sistema *s)
     if (buffer[0] == '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->ip, buffer, MAX_DESC - 1);
+        strncpy(e->ip, buffer, sizeof(e->ip) - 1);
+        e->ip[sizeof(e->ip) - 1] = '\0';
     }
 
     printf(" Endereço MAC [%s]: ", e->mac);
-    fgets(buffer, MAX_DESC, stdin);
+    fgets(buffer, MAX_MAC, stdin);
     if (buffer[0] == '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->mac, buffer, MAX_DESC - 1);
+        strncpy(e->mac, buffer, sizeof(e->mac) - 1);
+        e->mac[sizeof(e->mac) - 1] = '\0';
     }
 
     printf(" Localização [%s]: ", e->localizacao);
-    fgets(buffer, MAX_DESC, stdin);
+    fgets(buffer, MAX_LOCAL, stdin);
     if (buffer[0] == '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
-        strncpy(e->localizacao, buffer, MAX_DESC - 1);
+        strncpy(e->localizacao, buffer, sizeof(e->localizacao) - 1);
+        e->localizacao[sizeof(e->localizacao) - 1] = '\0';
     }
 
     obterDataAtual(e->dataUltimaVerificacao);
@@ -449,7 +448,7 @@ void alterarEstado(Sistema *s)
 }
 
 // 5. Listar Todos os Equipamentos
-void listarEquipamentos(const Sistema *s)
+void listarTodos(const Sistema *s)
 {
     limparEcra();
     printf("\n  ══════════════════════════════════════\n");
@@ -682,7 +681,7 @@ void carregarFicheiro(Sistema *s)
 
 // 10. Stats geral do modulo
 
-void menuEstatisticos(Sistema *s)
+void menuEstatistica(const Sistema *s)
 {
     limparEcra();
     printf("\n  ══════════════════════════════════════\n");

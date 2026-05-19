@@ -1,0 +1,5 @@
+=========== RELATORIO INCIDENTES ===========
+
+Pendentes : 0
+Resolvidos: 0
+Total     : 1

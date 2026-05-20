@@ -26,6 +26,7 @@
 #define MAX_UNIDADE     10
 
 // Binários
+#define FICHEIRO_DAT        "inventario.dat"
 #define FICH_EQUIPAMENTOS   "equipamentos.dat"
 #define FICH_INCIDENTES     "incidentes.dat"
 #define FICH_CONFIGURACOES  "configuracoes.dat"
@@ -39,10 +40,11 @@
 
 /* ================= ENUMERAÇÕES ================= */
 
-typedef enum {
+typedef enum
+{
     ROUTER = 1,
     SWITCH_L2,
-    ACCESS_POINT,
+    ACESS_POINT,
     SERVIDOR_NAS,
     IMPRESSORA_REDE,
     CAMERA_IP,
@@ -50,18 +52,38 @@ typedef enum {
     UPS
 } TipoEquipamento;
 
-typedef enum {
+typedef enum
+{
     OPERACIONAL = 1,
     EM_FALHA,
     EM_MANUTENCAO,
     DESATIVADO
 } EstadoEquipamento;
 
-typedef enum {
-    PENDENTE = 1,
-    EM_CURSO,
-    RESOLVIDO
+// Módulo 4 — estados do incidente (3 estados conforme enunciado)
+typedef enum
+{
+    INC_PENDENTE = 1,
+    INC_EM_CURSO,
+    INC_CONCLUIDO
 } EstadoIncidente;
+
+// Módulo 4 — prioridade
+typedef enum
+{
+    PRIORIDADE_BAIXA = 1,
+    PRIORIDADE_MEDIA,
+    PRIORIDADE_ALTA,
+    PRIORIDADE_CRITICA
+} PrioridadeIncidente;
+
+// Módulo 4 — origem do incidente
+typedef enum
+{
+    ORIGEM_MANUAL = 1,
+    ORIGEM_PING,
+    ORIGEM_SENSOR
+} OrigemIncidente;
 
 // Módulo 3 — estado da leitura do sensor
 typedef enum
@@ -183,12 +205,9 @@ typedef struct
 TipoEquipamento selecionarTipo(void);
 EstadoEquipamento selecionarEstado(void);
 int temIncidentePendente(Sistema *s, int codigo);
-NodeEquipamento *encontrarPorCodigo(Sistema *s, int codigo);
-void imprimirEquipamento(Equipamento *e);
+void imprimirEquipamento(const Equipamento *e);
 const char *estadoEquipamentoToString(EstadoEquipamento estado);
 const char *tipoToString(TipoEquipamento t);
-NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip);
-NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac);
 
 
 // ========== MENU PRINCIPAL =================//
@@ -212,13 +231,18 @@ void             listarTodos(const Sistema *s);
 void             listarPorTipo(const Sistema *s);
 void             listarPorEstado(const Sistema *s);
 void             pesquisarEquipamento(const Sistema *s);
-// NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
-// void             imprimirEquipamento(const Equipamento *e);
+// problemas aqui
+NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
+NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip);
+NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac);
+void             imprimirEquipamento(const Equipamento *e);
 void             imprimirCabecalho(void);
 void             menuEstatistica(const Sistema *s);
 void             menuEquipamento(Sistema *s);
 void             guardarFicheiro(const Sistema *s);
 void             carregarFicheiro(Sistema *s);
+
+//util
 
 void              obterDataAtual(char *data);
 void              obterDataHoraAtual(char *datahora);
@@ -233,11 +257,6 @@ TipoEquipamento   selecionarTipo(void);
 EstadoEquipamento selecionarEstado(void);
 void              limparEcra(void);
 void              pausar(void);
-
-// Módulo 1 — lista ligada de equipamentos
-NodeEquipamento   *equipamentos;
-int                totalEquipamentos;
-int                proximoCodigoEquip;
 
 /* ================= MODULO 2 - CONECTIVIDADE ================= */
 

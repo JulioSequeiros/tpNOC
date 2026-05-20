@@ -44,7 +44,7 @@ typedef enum
 {
     ROUTER = 1,
     SWITCH_L2,
-    ACESS_POINT,
+    ACCESS_POINT,
     SERVIDOR_NAS,
     IMPRESSORA_REDE,
     CAMERA_IP,
@@ -63,9 +63,9 @@ typedef enum
 // Módulo 4 — estados do incidente (3 estados conforme enunciado)
 typedef enum
 {
-    INC_PENDENTE = 1,
-    INC_EM_CURSO,
-    INC_CONCLUIDO
+    PENDENTE = 1,
+    EM_CURSO,
+    CONCLUIDO
 } EstadoIncidente;
 
 // Módulo 4 — prioridade
@@ -201,14 +201,11 @@ typedef struct
     int                proximoCodigoCfg;
 } Sistema;
 
-/* ================= PROTOTIPOS AUXILIARES ================= */
-TipoEquipamento selecionarTipo(void);
-EstadoEquipamento selecionarEstado(void);
-int temIncidentePendente(Sistema *s, int codigo);
-void imprimirEquipamento(const Equipamento *e);
-const char *estadoEquipamentoToString(EstadoEquipamento estado);
-const char *tipoToString(TipoEquipamento t);
-
+/* ================= ALIASES DE COMPATIBILIDADE ================= */
+#define INC_PENDENTE   PENDENTE
+#define INC_EM_CURSO   EM_CURSO
+#define INC_CONCLUIDO  CONCLUIDO
+#define RESOLVIDO      CONCLUIDO
 
 // ========== MENU PRINCIPAL =================//
 void menuPrincipal(Sistema *s);
@@ -217,7 +214,6 @@ void menuConectividade(Sistema *s);
 void menuIncidente(Sistema *s);
 void menuRelatorios(Sistema *s);
 void menuFicheiro(Sistema *s);
-void menuEstatistica(const Sistema *s);
 
 void menuSair(void);
 
@@ -230,23 +226,23 @@ void             alterarEstado(Sistema *s);
 void             listarTodos(const Sistema *s);
 void             listarPorTipo(const Sistema *s);
 void             listarPorEstado(const Sistema *s);
-void             pesquisarEquipamento(const Sistema *s);
-// problemas aqui
-NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
+void             pesquisarEquipamento(Sistema *s);
+NodeEquipamento *encontrarPorCodigo(Sistema *s, int codigo);
 NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip);
 NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac);
-void             imprimirEquipamento(const Equipamento *e);
+void             imprimirEquipamento(Equipamento *e);
 void             imprimirCabecalho(void);
 void             menuEstatistica(const Sistema *s);
 void             menuEquipamento(Sistema *s);
-void             guardarFicheiro(const Sistema *s);
-void             carregarFicheiro(Sistema *s);
+void             guardarEquipamento(const Sistema *s);
+void             carregarEquipameto(Sistema *s);
 
 //util
 
 void              obterDataAtual(char *data);
 void              obterDataHoraAtual(char *datahora);
 void              limparBuffer(void);
+void              limparBufferLocal(void);
 int               lerInteiro(const char *prompt, int min, int max);
 void              lerString(const char *prompt, char *dest, int maxLen);
 const char       *tipoToString(TipoEquipamento tipo);
@@ -255,6 +251,7 @@ const char       *estadoIncidenteToString(EstadoIncidente estado);
 const char       *estadoSensorToString(EstadoSensor estado);
 TipoEquipamento   selecionarTipo(void);
 EstadoEquipamento selecionarEstado(void);
+int temIncidentePendente(Sistema *s, int codigo);
 void              limparEcra(void);
 void              pausar(void);
 
@@ -287,7 +284,6 @@ void          menuSensores(Sistema *s);
 /* ================= MODULO 4 - INCIDENTES ================= */
 
 void criarIncidente(Sistema *s);
-void criarIncidenteAutoPorFalhaNoPing(Sistema *s);
 void criarIncidenteAutoPorLeituraAnomalaDoSensor(Sistema *s);
 
 void gerirIncidentesPendentesNaFilaDeAtendimento(Sistema *s);

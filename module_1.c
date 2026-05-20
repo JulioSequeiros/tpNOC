@@ -66,7 +66,7 @@ const char *tipoToString(TipoEquipamento tipo)
     {
     case ROUTER:          return "Router";
     case SWITCH_L2:       return "Switch L2";
-    case ACESS_POINT:     return "Access Point";
+    case ACCESS_POINT:    return "Access Point";
     case SERVIDOR_NAS:    return "Servidor/NAS";
     case IMPRESSORA_REDE: return "Impressora de Rede";
     case CAMERA_IP:       return "Câmara IP";
@@ -80,7 +80,7 @@ const char *estadoEquipamentoToString(EstadoEquipamento estado)
 {
     switch (estado)
     {
-    case OPERACIONAL:    return "Operacional";
+    case OPERACIONAL:  return "Operacional";
     case EM_FALHA:       return "Em Falha";
     case EM_MANUTENCAO:  return "Em Manutenção";
     case DESATIVADO:     return "Desativado";
@@ -92,9 +92,9 @@ const char *estadoIncidenteToString(EstadoIncidente estado)
 {
     switch (estado)
     {
-    case INC_PENDENTE:  return "Pendente";
-    case INC_EM_CURSO:  return "Em Curso";
-    case INC_CONCLUIDO: return "Concluído";
+    case PENDENTE:  return "Pendente";
+    case EM_CURSO:  return "Em Curso";
+    case CONCLUIDO: return "Concluído";
     default:            return "Desconhecido";
     }
 }
@@ -150,6 +150,55 @@ void pausar(void)
     limparBuffer();
 }
 
+NodeEquipamento *encontrarPorCodigo(Sistema *s, int codigo)
+{
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (atual->dados.codigo == codigo)
+            return atual;
+        atual = atual->proximo;
+    }
+    return NULL;
+}
+
+NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip)
+{
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (strcmp(atual->dados.ip, ip) == 0)
+            return atual;
+        atual = atual->proximo;
+    }
+    return NULL;
+}
+
+NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac)
+{
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL)
+    {
+        if (strcmp(atual->dados.mac, mac) == 0)
+            return atual;
+        atual = atual->proximo;
+    }
+    return NULL;
+}
+
+int temIncidentePendente(Sistema *s, int codigo)
+{
+    NodeIncidente *atual = s->incidentes;
+    while (atual != NULL)
+    {
+        if (atual->dados.codigoEquipamento == codigo &&
+            atual->dados.estado != CONCLUIDO)
+            return 1;
+        atual = atual->proximo;
+    }
+    return 0;
+}
+
 /*
  * Prints
  */
@@ -164,7 +213,7 @@ void imprimirCabecalho(void)
     printf("\n");
 }
 
-void imprimirEquipamento(const Equipamento *e)
+void imprimirEquipamento(Equipamento *e)
 {
     printf("  %-6d %-20s %-18s %-15s %-16s %-18s %-17s %-16s\n",
            e->codigo, e->nome, tipoToString(e->tipo), e->marca,
@@ -499,7 +548,6 @@ void listarPorTipo(const Sistema *s)
         if (atual->dados.tipo == tipo)
         {
             imprimirEquipamento(&atual->dados);
-            printf("\n-----------------------------\n");
             count++;
         }
         atual = atual->proximo;
@@ -507,8 +555,7 @@ void listarPorTipo(const Sistema *s)
 
     if (count == 0)
     {
-        printf("\n [!] Não existem equipamentos do tipo \"%s\" encontrado.\n");
-        tipoToString(tipo);
+        printf("\n [!] Não existem equipamentos do tipo \"%s\" encontrado.\n", tipoToString(tipo));
     }
     printf("\n Total de equipamentos do tipo \"%s\": %d\n", tipoToString(tipo), count);
     pausar();
@@ -540,7 +587,6 @@ void listarPorEstado(const Sistema *s)
         if (atual->dados.estado == estado)
         {
             imprimirEquipamento(&atual->dados);
-            printf("\n-----------------------------\n");
             count++;
         }
         atual = atual->proximo;
@@ -555,7 +601,7 @@ void listarPorEstado(const Sistema *s)
 }
 
 //8. Pesquisar equipamento por codigo, IP, MAC
-void pesquisarEquipamento(const Sistema *s)
+void pesquisarEquipamento(Sistema *s)
 {
     limparEcra();
     printf("\n  ══════════════════════════════════════\n");
@@ -608,22 +654,8 @@ void pesquisarEquipamento(const Sistema *s)
     pausar();
 }
 
-NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo)
-{
-    NodeEquipamento *atual = s->equipamentos;
-    while (atual != NULL)
-    {
-        if (atual->dados.codigo == codigo)
-        {
-            return atual;
-        }
-        atual = atual->proximo;
-    }
-    return NULL;
-}
-
 //9. Guardar e carregar o ficheiro binario
-void guardarInventario(const Sistema *s)
+void guardarEquipamento(const Sistema *s)
 {
     FILE *f = fopen(FICH_EQUIPAMENTOS, "wb");
     if (f == NULL)
@@ -648,7 +680,7 @@ void guardarInventario(const Sistema *s)
     printf("\n [OK] Equipamentos guardado com sucesso em \"%s\".\n",FICH_EQUIPAMENTOS);
 }
 
-void carregarFicheiro(Sistema *s)
+void carregarEquipameto(Sistema *s)
 {
     FILE *f = fopen(FICH_EQUIPAMENTOS, "rb");
     if (f == NULL)

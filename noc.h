@@ -73,39 +73,110 @@ typedef enum
 } EstadoSensor;
 
 /* ================= STRUCTS ================= */
+// Modulo 1
+typedef struct Equipamento {
+    TipoEquipamento tipo;
+    int codigo;
+    char nome[MAX_NOME];
+    char marca[MAX_MARCA];
+    char modelo[MAX_MODELO];
+    char ip[MAX_IP];
+    char mac[MAX_MAC];
+    char localizacao[MAX_LOCAL];
+    EstadoEquipamento estado;
+    char dataUltimaVerificacao[MAX_DATA];
+} Equipamento;
 
+typedef struct NodeEquipamento {
+    Equipamento dados;
+    struct NodeEquipamento *proximo;
+} NodeEquipamento;
+
+// Modulo 3
+typedef struct
+{
+    char         codigoSensor[MAX_COD_SENSOR];
+    char         tipo[MAX_NOME];            // ex: "Temperatura da rack"
+    float        valor;
+    char         unidade[MAX_UNIDADE];      // ex: "C", "%", "-"
+    EstadoSensor estado;
+    char         dataHoraLeitura[MAX_DATAHORA];
+} LeituraSensor;
+
+typedef struct NodeSensor
+{
+    LeituraSensor      dados;
+    struct NodeSensor *proximo;
+} NodeSensor;
+
+//Modulo 4
 typedef struct Incidente{
-
     int codigo;
     int codigoEquipamento;
-
     char descricao[MAX_DESC];
-
     EstadoIncidente estado;
-
     char dataAbertura[MAX_DATA];
     char dataFecho[MAX_DATA];
-
 } Incidente;
 
 typedef struct NodeIncidente {
-
     Incidente dados;
     struct NodeIncidente *proximo;
-
 } NodeIncidente;
 
-typedef struct Sistema{
+// Fila de atendimento FIFO (incidentes pendentes) — Módulo 4
+typedef struct
+{
+    NodeIncidente *inicio;
+    NodeIncidente *fim;
+    int            total;
+} FilaIncidentes;
 
-    NodeEquipamento *equipamentos;
-    NodeIncidente *incidentes;
+//Modulo 5
+typedef struct
+{
+    int  codigoEquipamento;
+    char tipoConfiguracao[MAX_TIPO_CONFIG]; // ex: "IP", "Estado", "Localização"
+    char valorAnterior[MAX_VALOR];
+    char novoValor[MAX_VALOR];
+    char tecnico[MAX_TECNICO];
+    char dataHora[MAX_DATAHORA];
+} Configuracao;
 
-    int totalEquipamentos;
-    int totalIncidentes;
+typedef struct NodeConfiguracao
+{
+    Configuracao            dados;
+    struct NodeConfiguracao *proximo;       // topo da pilha = cabeça da lista
+} NodeConfiguracao;
 
-    int proximoCodigoEquip;
-    int proximoCodigoInc;
+// Pilha de reversão LIFO — Módulo 5
+typedef struct
+{
+    NodeConfiguracao *topo;
+    int               total;
+} PilhaConfiguracoes;
 
+typedef struct
+{
+    // Módulo 1 — lista ligada de equipamentos
+    NodeEquipamento   *equipamentos;
+    int                totalEquipamentos;
+    int                proximoCodigoEquip;
+
+    // Módulo 3 — lista ligada de leituras de sensores
+    NodeSensor        *sensores;
+    int                totalSensores;
+
+    // Módulo 4 — lista histórica + fila de atendimento
+    NodeIncidente     *incidentes;
+    FilaIncidentes     filaAtendimento;
+    int                totalIncidentes;
+    int                proximoCodigoInc;
+
+    // Módulo 5 — pilha de configurações
+    PilhaConfiguracoes pilhaConfiguracoes;
+    int                totalConfiguracoes;
+    int                proximoCodigoCfg;
 } Sistema;
 
 /* ================= PROTOTIPOS AUXILIARES ================= */
@@ -128,28 +199,10 @@ void menuIncidente(Sistema *s);
 void menuRelatorios(Sistema *s);
 void menuFicheiro(Sistema *s);
 void menuEstatistica(const Sistema *s);
-void menuFicheiro(Sistema *s);
+
 void menuSair(void);
 
 /* ================= MODULO 1 ================= */
-
-typedef struct Equipamento {
-    TipoEquipamento tipo;
-    int codigo;
-    char nome[MAX_NOME];
-    char marca[MAX_MARCA];
-    char modelo[MAX_MODELO];
-    char ip[MAX_IP];
-    char mac[MAX_MAC];
-    char localizacao[MAX_LOCAL];
-    EstadoEquipamento estado;
-    char dataUltimaVerificacao[MAX_DATA];
-} Equipamento;
-
-typedef struct NodeEquipamento {
-    Equipamento dados;
-    struct NodeEquipamento *proximo;
-} NodeEquipamento;
 
 void             adicionarEquipamento(Sistema *s);
 void             removerEquipamento(Sistema *s);
@@ -159,8 +212,8 @@ void             listarTodos(const Sistema *s);
 void             listarPorTipo(const Sistema *s);
 void             listarPorEstado(const Sistema *s);
 void             pesquisarEquipamento(const Sistema *s);
-NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
-void             imprimirEquipamento(const Equipamento *e);
+// NodeEquipamento *encontrarPorCodigo(const Sistema *s, int codigo);
+// void             imprimirEquipamento(const Equipamento *e);
 void             imprimirCabecalho(void);
 void             menuEstatistica(const Sistema *s);
 void             menuEquipamento(Sistema *s);
@@ -201,22 +254,6 @@ void mostrarFerramentasExtras(Sistema *s);
 
 /* ================= MODULO 3 ================= */
 
-typedef struct
-{
-    char         codigoSensor[MAX_COD_SENSOR];
-    char         tipo[MAX_NOME];            // ex: "Temperatura da rack"
-    float        valor;
-    char         unidade[MAX_UNIDADE];      // ex: "C", "%", "-"
-    EstadoSensor estado;
-    char         dataHoraLeitura[MAX_DATAHORA];
-} LeituraSensor;
-
-typedef struct NodeSensor
-{
-    LeituraSensor      dados;
-    struct NodeSensor *proximo;
-} NodeSensor;
-
 void          importarSensores(Sistema *s);
 void          listarSensores(const Sistema *s);
 void          pesquisarSensor(const Sistema *s);
@@ -227,10 +264,6 @@ void          carregarSensoresFicheiro(Sistema *s);
 void          registarLogSensores(const char *mensagem);
 EstadoSensor  parseEstadoSensor(const char *str);
 void          menuSensores(Sistema *s);
-
-// Módulo 3 — lista ligada de leituras de sensores
-NodeSensor        *sensores;
-int                totalSensores;
 
 /* ================= MODULO 4 - INCIDENTES ================= */
 
@@ -254,23 +287,6 @@ void guardarCarregarIncidentesFicheiroBinario(Sistema *s);
 void outrasAtividadesRelevantes(Sistema *s);
 
 /* ================= MODULO 5 ================= */
-
-typedef struct
-{
-    int  codigoEquipamento;
-    char tipoConfiguracao[MAX_TIPO_CONFIG]; // ex: "IP", "Estado", "Localização"
-    char valorAnterior[MAX_VALOR];
-    char novoValor[MAX_VALOR];
-    char tecnico[MAX_TECNICO];
-    char dataHora[MAX_DATAHORA];
-} Configuracao;
-
-typedef struct NodeConfiguracao
-{
-    Configuracao            dados;
-    struct NodeConfiguracao *proximo;       // topo da pilha = cabeça da lista
-} NodeConfiguracao;
-
 void registarConfiguracao(Sistema *s);
 void consultarUltimaConfiguracao(const Sistema *s);
 void consultarNConfiguracoes(const Sistema *s);
@@ -280,19 +296,6 @@ void limparConfiguracoes(Sistema *s);
 void guardarConfiguracoesFicheiro(const Sistema *s);
 void carregarConfiguracoesFicheiro(Sistema *s);
 void menuConfiguracoes(Sistema *s);
-
-// Pilha de reversão LIFO — Módulo 5
-typedef struct
-{
-    NodeConfiguracao *topo;
-    int               total;
-} PilhaConfiguracoes;
-
-// Módulo 5 — pilha de configurações
-PilhaConfiguracoes pilhaConfiguracoes;
-int                totalConfiguracoes;
-int                proximoCodigoCfg;
-} Sistema;
 
 /* ================= MODULO 6 - RELATORIOS ================= */
 void carregarFicheiro(Sistema *s);

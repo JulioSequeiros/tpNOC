@@ -15,11 +15,6 @@ void obterDataAtual(char *data)
     strftime(data, MAX_DATA, "%d-%m-%Y", tm_info);
 }
 
-void limparBuffer(void)
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
 
 int lerInteiro(const char *prompt, int min, int max)
 {
@@ -38,6 +33,14 @@ int lerInteiro(const char *prompt, int min, int max)
         printf("  [!] Valor inválido. Introduza um número entre %d e %d.\n", min, max);
     }
 }
+
+void limparBuffer(void)
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+
 
 void lerString(const char *prompt, char *dest, int maxLen)
 {

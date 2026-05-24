@@ -21,24 +21,28 @@ EstadoSensor paraEstadoSensor(const char *estadoStr)
     return SENSOR_NORMAL; // Default
 }
 
-// Resgista mensagem no log do sensores
+// Regista mensagem no log do sensores
 void registarLogSensores(const char *mensagem)
 {
     FILE *f = fopen(FICH_LOG_SENSORES, "a");
     if (f == NULL) return;
     char datahora[MAX_DATAHORA];
     obterDataHoraAtual(datahora);
-    fprintf(f, "%s\n", datahora);
+    fprintf(f, "[%s] %s\n", datahora, mensagem);  // Adiciona a mensagem
     fclose(f);
 }
 
-//Encontrar sensor por codigo
+// Encontrar sensor por codigo
 NodeSensor *encontrarSensorPorCodigo(const Sistema *s, const char *codigo)
 {
     NodeSensor *atual = s->sensores;
     while (atual != NULL)
     {
-        if (strcmp(atual->dados.codigoSensor, codigo) == 0)
+        // Converter o código recebido (string) para inteiro
+        int codigoInt = atoi(codigo);
+        
+        // Comparar com o campo 'codigo' (que é int)
+        if (atual->dados.codigo == codigoInt)
             return atual;
         atual = atual->proximo;
     }
@@ -46,23 +50,33 @@ NodeSensor *encontrarSensorPorCodigo(const Sistema *s, const char *codigo)
 }
 
 // Cria incidente automatico para leitura anómala (sem input do utilizador)
-static void criarInciddenteSensorAuto(Sistema *s, const LeituraSensor *leitura)
+static void __attribute__((unused)) criarIncidenteSensorAuto(Sistema *s, const LeituraSensor *leitura)
 {
-    NodeIncidente *novo =  (NodeIncidente *)malloc(sizeof(NodeIncidente));
+    NodeIncidente *novo = (NodeIncidente *)malloc(sizeof(NodeIncidente));
     if (novo == NULL) return;
 
     memset(novo, 0, sizeof(NodeIncidente));
-    novo->dados.codigo = s->proximoCodigoInc++;
-    novo->dados.codigoEquipamento = 0;
+    novo->dados.codigo = ++s->proximoCodigoInc;
+    novo->dados.codigoEquipamento = leitura->codigo;
+
+    // Converter o estado de string para enum antes de usar
+    EstadoSensor estadoSensor = SENSOR_NORMAL;
+    if (strcmp(leitura->estado, "AVISO") == 0)
+        estadoSensor = SENSOR_AVISO;
+    else if (strcmp(leitura->estado, "CRITICO") == 0)
+        estadoSensor = SENSOR_CRITICO;
+    else if (strcmp(leitura->estado, "FALHA_REDE") == 0)
+        estadoSensor = SENSOR_FALHA_REDE;
 
     snprintf(novo->dados.descricao, MAX_DESC,
-    "Leitura anómala no sensor %s: %.2f%s [%s]",
-        leitura->codigoSensor,
-        leitura->valor,
-        leitura->unidade,
-        estadoSensorToString(leitura->estado));
+             "Leitura anomala no sensor %d: %.2f%s [%s]",
+             leitura->codigo,
+             leitura->valor,
+             leitura->unidade,
+             estadoSensorToString(estadoSensor));
 
     novo->dados.estado = PENDENTE;
+    novo->dados.prioridade = 1;
     obterDataAtual(novo->dados.dataAbertura);
     strcpy(novo->dados.dataFecho, "-");
 
@@ -70,7 +84,8 @@ static void criarInciddenteSensorAuto(Sistema *s, const LeituraSensor *leitura)
     s->incidentes = novo;
     s->totalIncidentes++;
 
-    printf(" [AUTO] Incidente #%d criado para sensor %s\n",
-        novo->dados.codigo, leitura->codigoSensor);
-}
+    adicionarNaFilaAtendimento(s, novo->dados.codigo);
 
+    printf(" [AUTO] Incidente #%d criado para sensor %d\n",
+           novo->dados.codigo, leitura->codigo);
+}

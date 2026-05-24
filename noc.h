@@ -76,6 +76,8 @@ typedef struct {
     char descricao[MAX_DESC];
 
     EstadoIncidente estado;
+    
+    int prioridade;  // ← NOVO: 1=Alta, 2=Média, 3=Baixa
 
     char dataAbertura[MAX_DATA];
     char dataFecho[MAX_DATA];
@@ -96,18 +98,64 @@ typedef struct NodeIncidente {
 
 } NodeIncidente;
 
-typedef struct {
+/* ================= ESTRUTURAS PARA FILA (Testes Pendentes) ================= */
 
+typedef struct TestePendente {
+    int codigoEquipamento;
+    char ip[20];
+    char nomeEquip[MAX_NOME];
+    struct TestePendente *proximo;
+} TestePendente;
+
+/* ================= ESTRUTURAS PARA PILHA (Histórico de Comandos) ================= */
+
+typedef struct ComandoExecutado {
+    char comando[300];
+    char dataHora[MAX_DATA];
+    int codigoEquipamento;
+    int respondeu;          // 1 = online, 0 = offline
+    struct ComandoExecutado *anterior;
+} ComandoExecutado;
+
+/* ================= ESTRUTURAS PARA FILA DE ATENDIMENTO DE INCIDENTES ================= */
+
+typedef struct FilaAtendimento {
+    int codigoIncidente;
+    struct FilaAtendimento *proximo;
+} FilaAtendimento;
+
+/* ================= ESTRUTURA SISTEMA (CORRIGIDA) ================= */
+
+typedef struct Sistema {
     NodeEquipamento *equipamentos;
     NodeIncidente *incidentes;
-
+    
     int totalEquipamentos;
     int totalIncidentes;
-
+    
     int proximoCodigoEquip;
     int proximoCodigoInc;
-
+    
+    /* FILA para testes pendentes (Módulo 2) */
+    struct {
+        struct TestePendente *frente;
+        struct TestePendente *tras;
+        int tamanho;
+    } filaTestes;
+    
+    /* PILHA para histórico de comandos (Módulo 2) */
+    struct {
+        struct ComandoExecutado *topo;
+        int tamanho;
+    } pilhaComandos;
+    
+    /* ========== NOVOS CAMPOS PARA O MÓDULO 4 ========== */
+    /* FILA para atendimento de incidentes */
+    FilaAtendimento *filaAtendimento;      // Cabeça da fila (FIFO)
+    FilaAtendimento *filaAtendimentoTras;  // Fim da fila
+    
 } Sistema;
+
 
 /* ================= PROTOTIPOS AUXILIARES ================= */
 TipoEquipamento selecionarTipo(void);
@@ -176,6 +224,11 @@ void registarTesteLog(Sistema *s);
 void criarIncidenteAutoPorFalhaNoPing(Sistema *s);
 void pingGeral(Sistema *s);
 void mostrarFerramentasExtras(Sistema *s);
+void executarComandosRedeExtra(Sistema *s);
+void obterInfoRedeLocal(void);
+void obterTabelaARP(void);
+void obterResolucaoDNS(void);
+void obterRotaDestino(void);
 
 /* ================= MODULO 3 - (VAZIO) ================= */
 
@@ -185,6 +238,8 @@ void mostrarFerramentasExtras(Sistema *s);
 
 
 
+
+/* ================= MODULO 4 - INCIDENTES ================= */
 
 /* ================= MODULO 4 - INCIDENTES ================= */
 
@@ -207,11 +262,31 @@ void guardarCarregarIncidentesFicheiroBinario(Sistema *s);
 
 void outrasAtividadesRelevantes(Sistema *s);
 
+/* ========== NOVOS PROTÓTIPOS PARA A FILA ========== */
+void inicializarFilaAtendimento(Sistema *s);
+void adicionarNaFilaAtendimento(Sistema *s, int codigoIncidente);
+int removerDaFilaAtendimento(Sistema *s);
+void listarFilaAtendimento(Sistema *s);
+
 /* ================= MODULO 5 - (VAZIO) ================= */
 
 
 
 /* ================= MODULO 6 - RELATORIOS ================= */
+/* ================= MODULO 6 - RELATORIOS ================= */
+
+/* Estrutura para leituras de sensores (opcional - para histórico) */
+typedef struct LeituraSensor {
+    int codigo;
+    char tipo[50];
+    float valor;
+    char unidade[10];
+    char estado[20];
+    char dataHora[MAX_DATA];
+    struct LeituraSensor *proximo;
+} LeituraSensor;
+
+/* Funções principais do Módulo 6 */
 void carregarFicheiro(Sistema *s);
 void guardarFicheiro(const Sistema *s);
 void importarLeiturasSensores(Sistema *s);
@@ -219,5 +294,15 @@ void guardarResultadosRede(Sistema *s);
 void gerarRelatorioEstadoRede(Sistema *s);
 void gerarRelatorioMensalIncidentes(Sistema *s);
 void outrasAtividadesRelatorios(Sistema *s);
+
+/* ========== NOVAS FUNÇÕES PARA FICHEIROS BINÁRIOS COMPLETOS ========== */
+void carregarTodosDados(Sistema *s);
+void guardarTodosDados(Sistema *s);
+
+void carregarEquipamentos(Sistema *s);
+void guardarEquipamentos(Sistema *s);
+
+void carregarIncidentes(Sistema *s);
+void guardarIncidentes(Sistema *s);
 
 #endif

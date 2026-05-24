@@ -119,763 +119,892 @@ void menuIncidente(Sistema *s) {
 
 // ================= FUNÇÕES =================
 
-void criarIncidente(Sistema *s){
+void criarIncidente(Sistema *s) {
+    
+    // Verificar se existem equipamentos
     if (s->equipamentos == NULL) {
-        printf("Nao existem equipamentos.\n");
+        printf("\n[ERRO] Nao existem equipamentos registados!\n");
+        printf("Por favor, registe equipamentos no Modulo 1 primeiro.\n");
+        pausar();
         return;
     }
-
-    int codigoEquip;
-    char desc[MAX_DESC];
-
-    printf("Codigo do equipamento: ");
-    scanf("%d", &codigoEquip);
-    limparBufferLocal();
-
-    printf("Descricao: ");
-    fgets(desc, MAX_DESC, stdin);
-    desc[strcspn(desc, "\n")] = 0;
-
-    NodeIncidente *novo = malloc(sizeof(NodeIncidente));
-    if (!novo) {
-        printf("Erro de memoria!\n");
+    
+    // Listar equipamentos disponíveis
+    printf("\n=========== EQUIPAMENTOS DISPONIVEIS ===========\n");
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL) {
+        printf("  Codigo: %d | Nome: %s | Estado: %s\n",
+               atual->dados.codigo,
+               atual->dados.nome,
+               estadoEquipamentoToString(atual->dados.estado));
+        atual = atual->proximo;
+    }
+    printf("================================================\n");
+    
+    // Pedir código do equipamento
+    int codigoEquip = lerInteiro("Insira o codigo do equipamento", 1, 9999);
+    
+    // Verificar se equipamento existe
+    NodeEquipamento *equip = encontrarPorCodigo(s, codigoEquip);
+    if (equip == NULL) {
+        printf("\n[ERRO] Equipamento com codigo %d nao encontrado!\n", codigoEquip);
+        pausar();
         return;
     }
-
-    novo->dados.codigo = s->proximoCodigoInc++;
-    novo->dados.codigoEquipamento = codigoEquip;
-
-    strcpy(novo->dados.descricao, desc);
-    novo->dados.estado = PENDENTE;
-
-    obterDataAtual(novo->dados.dataAbertura);
-    strcpy(novo->dados.dataFecho, "-");
-
-    novo->proximo = s->incidentes;
-    s->incidentes = novo;
-
-    s->totalIncidentes++;
-
-    guardarFicheiro(s);
-
-    printf("Incidente criado com sucesso!\n");
-}
-
-void criarIncidenteAutoPorFalhaNoPing(Sistema *s){
     
-    int codigoEquip;
-
-    printf("Codigo equipamento: ");
-    scanf("%d", &codigoEquip);
-    limparBufferLocal();
-
-    NodeIncidente *novo = malloc(sizeof(NodeIncidente));
-    if (!novo) return;
-
-    novo->dados.codigo = s->proximoCodigoInc++;
-    novo->dados.codigoEquipamento = codigoEquip;
-
-    strcpy(novo->dados.descricao,
-           "Falha de comunicacao (ping nao respondeu)");
-
-    novo->dados.estado = PENDENTE;
-
-    obterDataAtual(novo->dados.dataAbertura);
-    strcpy(novo->dados.dataFecho, "-");
-
-    novo->proximo = s->incidentes;
-    s->incidentes = novo;
-
-    s->totalIncidentes++;
-
-    guardarFicheiro(s);
-
-    printf("Incidente automatico criado (PING).\n");
-}
-
-
-void criarIncidenteAutoPorLeituraAnomalaDoSensor(Sistema *s){
+    // Pedir descrição
+    char descricao[MAX_DESC];
+    printf("\nDescricao do incidente: ");
+    fgets(descricao, MAX_DESC, stdin);
+    descricao[strcspn(descricao, "\n")] = '\0';
     
-    int codigoEquip;
-
-    printf("Codigo sensor/equipamento: ");
-    scanf("%d", &codigoEquip);
-    limparBufferLocal();
-
-    NodeIncidente *novo = malloc(sizeof(NodeIncidente));
-    if (!novo) return;
-
-    novo->dados.codigo = s->proximoCodigoInc++;
+    // Pedir prioridade
+    printf("\nPrioridade do incidente:\n");
+    printf("1. Alta\n");
+    printf("2. Media\n");
+    printf("3. Baixa\n");
+    int prioridade = lerInteiro("Prioridade", 1, 3);
+    
+    // Criar incidente
+    NodeIncidente *novo = (NodeIncidente*)malloc(sizeof(NodeIncidente));
+    if (novo == NULL) {
+        printf("[ERRO] Falha ao alocar memoria!\n");
+        pausar();
+        return;
+    }
+    
+    novo->dados.codigo = ++s->proximoCodigoInc;
     novo->dados.codigoEquipamento = codigoEquip;
-
-    strcpy(novo->dados.descricao,
-           "Leitura anomala detetada em sensor");
-
+    strcpy(novo->dados.descricao, descricao);
     novo->dados.estado = PENDENTE;
-
+    novo->dados.prioridade = prioridade;
     obterDataAtual(novo->dados.dataAbertura);
     strcpy(novo->dados.dataFecho, "-");
-
+    
+    // Inserir na lista de incidentes
     novo->proximo = s->incidentes;
     s->incidentes = novo;
-
     s->totalIncidentes++;
-
+    
+    // Adicionar à FILA de atendimento
+    adicionarNaFilaAtendimento(s, novo->dados.codigo);
+    
+    printf("\n================================================\n");
+    printf(" INCIDENTE CRIADO COM SUCESSO!\n");
+    printf("================================================\n");
+    printf("ID do incidente: #%d\n", novo->dados.codigo);
+    printf("Equipamento: %s (Codigo: %d)\n", equip->dados.nome, codigoEquip);
+    printf("Descricao: %s\n", descricao);
+    printf("Prioridade: %s\n", prioridade == 1 ? "ALTA" : (prioridade == 2 ? "MEDIA" : "BAIXA"));
+    printf("Estado: PENDENTE\n");
+    printf("Data de abertura: %s\n", novo->dados.dataAbertura);
+    printf("================================================\n");
+    
+    // Registar no log
+    FILE *log = fopen("log_monitorizacao.txt", "a");
+    if (log != NULL) {
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char dataHora[50];
+        strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
+        fprintf(log, "[%s] Incidente #%d criado manualmente para equipamento %d - Prioridade: %s\n",
+                dataHora, novo->dados.codigo, codigoEquip,
+                prioridade == 1 ? "ALTA" : (prioridade == 2 ? "MEDIA" : "BAIXA"));
+        fclose(log);
+    }
+    
     guardarFicheiro(s);
-
-    printf("Incidente criado por sensor.\n");
+    pausar();
 }
 
+void criarIncidenteAutoPorFalhaNoPing(Sistema *s) {
+    
+    if (s->equipamentos == NULL) {
+        printf("\n[ERRO] Nao existem equipamentos registados!\n");
+        pausar();
+        return;
+    }
+    
+    // Listar equipamentos
+    printf("\n=========== EQUIPAMENTOS DISPONIVEIS ===========\n");
+    NodeEquipamento *atual = s->equipamentos;
+    while (atual != NULL) {
+        printf("  Codigo: %d | Nome: %s | IP: %s\n",
+               atual->dados.codigo,
+               atual->dados.nome,
+               atual->dados.ip);
+        atual = atual->proximo;
+    }
+    printf("================================================\n");
+    
+    int codigoEquip = lerInteiro("Insira o codigo do equipamento que falhou no ping", 1, 9999);
+    
+    NodeEquipamento *equip = encontrarPorCodigo(s, codigoEquip);
+    if (equip == NULL) {
+        printf("[ERRO] Equipamento nao encontrado!\n");
+        pausar();
+        return;
+    }
+    
+    // Criar incidente automatico
+    NodeIncidente *novo = (NodeIncidente*)malloc(sizeof(NodeIncidente));
+    if (novo == NULL) {
+        printf("[ERRO] Falha ao alocar memoria!\n");
+        pausar();
+        return;
+    }
+    
+    novo->dados.codigo = ++s->proximoCodigoInc;
+    novo->dados.codigoEquipamento = codigoEquip;
+    strcpy(novo->dados.descricao, "Falha de comunicacao - Equipamento nao respondeu ao ping");
+    novo->dados.estado = PENDENTE;
+    novo->dados.prioridade = 1;  // Prioridade ALTA para falhas de ping
+    obterDataAtual(novo->dados.dataAbertura);
+    strcpy(novo->dados.dataFecho, "-");
+    
+    novo->proximo = s->incidentes;
+    s->incidentes = novo;
+    s->totalIncidentes++;
+    
+    // Adicionar à FILA
+    adicionarNaFilaAtendimento(s, novo->dados.codigo);
+    
+    // Alterar estado do equipamento para EM_FALHA
+    equip->dados.estado = EM_FALHA;
+    
+    printf("\n================================================\n");
+    printf(" INCIDENTE AUTOMATICO CRIADO (FALHA NO PING)\n");
+    printf("================================================\n");
+    printf("ID do incidente: #%d\n", novo->dados.codigo);
+    printf("Equipamento: %s (Codigo: %d)\n", equip->dados.nome, codigoEquip);
+    printf("Descricao: %s\n", novo->dados.descricao);
+    printf("Prioridade: ALTA\n");
+    printf("Estado do equipamento alterado para: EM_FALHA\n");
+    printf("================================================\n");
+    
+    // Registar no log
+    FILE *log = fopen("log_monitorizacao.txt", "a");
+    if (log != NULL) {
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char dataHora[50];
+        strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
+        fprintf(log, "[%s] Incidente #%d criado AUTOMATICAMENTE (ping falhou) para equipamento %d\n",
+                dataHora, novo->dados.codigo, codigoEquip);
+        fclose(log);
+    }
+    
+    guardarFicheiro(s);
+    pausar();
+}
+
+
+void criarIncidenteAutoPorLeituraAnomalaDoSensor(Sistema *s) {
+    
+    int codigoSensor;
+    char tipoLeitura[50];
+    char valorLeitura[20];
+    
+    printf("\n=========== INCIDENTE POR SENSOR ===========\n");
+    printf("Codigo do sensor: ");
+    scanf("%d", &codigoSensor);
+    limparBuffer();
+    
+    printf("Tipo de leitura anomalia (ex: Temperatura, Humidade, UPS): ");
+    fgets(tipoLeitura, sizeof(tipoLeitura), stdin);
+    tipoLeitura[strcspn(tipoLeitura, "\n")] = '\0';
+    
+    printf("Valor registado: ");
+    fgets(valorLeitura, sizeof(valorLeitura), stdin);
+    valorLeitura[strcspn(valorLeitura, "\n")] = '\0';
+    
+    // Criar descrição
+    char descricao[MAX_DESC];
+    snprintf(descricao, MAX_DESC, "Leitura anomala de sensor [%s] - Sensor %d - Valor: %s (CRITICO/AVISO)",
+             tipoLeitura, codigoSensor, valorLeitura);
+    
+    // Criar incidente
+    NodeIncidente *novo = (NodeIncidente*)malloc(sizeof(NodeIncidente));
+    if (novo == NULL) {
+        printf("[ERRO] Falha ao alocar memoria!\n");
+        pausar();
+        return;
+    }
+    
+    novo->dados.codigo = ++s->proximoCodigoInc;
+    novo->dados.codigoEquipamento = codigoSensor;
+    strcpy(novo->dados.descricao, descricao);
+    novo->dados.estado = PENDENTE;
+    novo->dados.prioridade = 1;  // Prioridade ALTA para anomalias
+    obterDataAtual(novo->dados.dataAbertura);
+    strcpy(novo->dados.dataFecho, "-");
+    
+    novo->proximo = s->incidentes;
+    s->incidentes = novo;
+    s->totalIncidentes++;
+    
+    // Adicionar à FILA
+    adicionarNaFilaAtendimento(s, novo->dados.codigo);
+    
+    printf("\n================================================\n");
+    printf(" INCIDENTE AUTOMATICO CRIADO (LEITURA SENSOR)\n");
+    printf("================================================\n");
+    printf("ID do incidente: #%d\n", novo->dados.codigo);
+    printf("Sensor: %d\n", codigoSensor);
+    printf("Descricao: %s\n", descricao);
+    printf("Prioridade: ALTA\n");
+    printf("================================================\n");
+    
+    // Registar no log
+    FILE *log = fopen("log_sensores.txt", "a");
+    if (log != NULL) {
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char dataHora[50];
+        strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
+        fprintf(log, "[%s] INCIDENTE #%d - Sensor %d - %s - Valor: %s\n",
+                dataHora, novo->dados.codigo, codigoSensor, tipoLeitura, valorLeitura);
+        fclose(log);
+    }
+    
+    guardarFicheiro(s);
+    pausar();
+}
+
+// ============================================================
+// FUNÇÕES AUXILIARES PARA A FILA DE ATENDIMENTO
+// ============================================================
+
+void inicializarFilaAtendimento(Sistema *s) {
+    s->filaAtendimento = NULL;
+    s->filaAtendimentoTras = NULL;
+}
+
+void adicionarNaFilaAtendimento(Sistema *s, int codigoIncidente) {
+    
+    FilaAtendimento *novo = (FilaAtendimento*)malloc(sizeof(FilaAtendimento));
+    if (novo == NULL) {
+        printf("[ERRO] Falha ao adicionar incidente na fila!\n");
+        return;
+    }
+    
+    novo->codigoIncidente = codigoIncidente;
+    novo->proximo = NULL;
+    
+    if (s->filaAtendimento == NULL) {
+        // Fila vazia
+        s->filaAtendimento = novo;
+        s->filaAtendimentoTras = novo;
+    } else {
+        // Adicionar no fim da fila
+        s->filaAtendimentoTras->proximo = novo;
+        s->filaAtendimentoTras = novo;
+    }
+    
+    printf("[FILA] Incidente #%d adicionado a fila de atendimento.\n", codigoIncidente);
+}
+
+int removerDaFilaAtendimento(Sistema *s) {
+    
+    if (s->filaAtendimento == NULL) {
+        return -1;  // Fila vazia
+    }
+    
+    FilaAtendimento *temp = s->filaAtendimento;
+    int codigoIncidente = temp->codigoIncidente;
+    
+    s->filaAtendimento = s->filaAtendimento->proximo;
+    
+    if (s->filaAtendimento == NULL) {
+        s->filaAtendimentoTras = NULL;
+    }
+    
+    free(temp);
+    return codigoIncidente;
+}
+
+void listarFilaAtendimento(Sistema *s) {
+    
+    printf("\n=========== FILA DE ATENDIMENTO (FIFO) ===========\n");
+    
+    if (s->filaAtendimento == NULL) {
+        printf("Nenhum incidente na fila de atendimento.\n");
+        return;
+    }
+    
+    FilaAtendimento *atual = s->filaAtendimento;
+    int posicao = 1;
+    
+    while (atual != NULL) {
+        // Procurar detalhes do incidente
+        NodeIncidente *inc = s->incidentes;
+        while (inc != NULL && inc->dados.codigo != atual->codigoIncidente) {
+            inc = inc->proximo;
+        }
+        
+        printf("%d. Incidente #%d", posicao, atual->codigoIncidente);
+        if (inc != NULL) {
+            printf(" - Equip: %d - Prioridade: %s",
+                   inc->dados.codigoEquipamento,
+                   inc->dados.prioridade == 1 ? "ALTA" : (inc->dados.prioridade == 2 ? "MEDIA" : "BAIXA"));
+        }
+        printf("\n");
+        
+        atual = atual->proximo;
+        posicao++;
+    }
+    printf("==================================================\n");
+}
 
 void gerirIncidentesPendentesNaFilaDeAtendimento(Sistema *s) {
-
-    if (s == NULL || s->incidentes == NULL) {
-
-        printf("Nao existem incidentes.\n");
-
+    
+    printf("\n=========== GESTAO DA FILA DE ATENDIMENTO ===========\n");
+    
+    // Mostrar incidentes pendentes (da lista)
+    if (s->incidentes == NULL) {
+        printf("Nao existem incidentes registados.\n");
+        pausar();
         return;
     }
-
+    
     NodeIncidente *atual = s->incidentes;
-
-    int encontrados = 0;
-    int posicao = 1;
-
-    printf("\n=========== FILA DE INCIDENTES PENDENTES ===========\n");
-
+    int pendentes = 0;
+    
+    printf("\n--- INCIDENTES PENDENTES ---\n");
     while (atual != NULL) {
-
         if (atual->dados.estado == PENDENTE) {
-
-            printf("\n[%d] INCIDENTE #%d\n",
-                   posicao,
-                   atual->dados.codigo);
-
-            printf("Equipamento : %d\n",
-                   atual->dados.codigoEquipamento);
-
-            printf("Descricao   : %s\n",
-                   atual->dados.descricao);
-
-            printf("Data abertura: %s\n",
+            printf("  #%d | Equip: %d | Prioridade: %s | Aberto: %s\n",
+                   atual->dados.codigo,
+                   atual->dados.codigoEquipamento,
+                   atual->dados.prioridade == 1 ? "ALTA" : 
+                   (atual->dados.prioridade == 2 ? "MEDIA" : "BAIXA"),
                    atual->dados.dataAbertura);
-
-            printf("-------------------------------------------\n");
-
-            encontrados++;
-            posicao++;
+            pendentes++;
         }
-
         atual = atual->proximo;
     }
-
-    if (encontrados == 0) {
-
-        printf("Nao existem incidentes pendentes.\n");
-
-    } else {
-
-        printf("\nTotal de incidentes pendentes: %d\n",
-               encontrados);
-    }
+    
+    printf("\nTotal de incidentes pendentes: %d\n", pendentes);
+    
+    // Mostrar fila de atendimento
+    printf("\n--- FILA DE ATENDIMENTO (ORDEM DE CHEGADA) ---\n");
+    listarFilaAtendimento(s);
+    
+    printf("==================================================\n");
+    pausar();
 }
 
-
-void processarProximoIncidenteNaFilaDeAtendimento(Sistema *s){
-
-    if (s == NULL || s->incidentes == NULL) {
-
-        printf("Nao existem incidentes.\n");
-
+void processarProximoIncidenteNaFilaDeAtendimento(Sistema *s) {
+    
+    printf("\n=========== PROCESSAR PROXIMO INCIDENTE ===========\n");
+    
+    // Verificar se há incidentes na fila
+    if (s->filaAtendimento == NULL) {
+        printf("Nenhum incidente na fila de atendimento!\n");
+        pausar();
         return;
     }
-
+    
+    // Remover da frente da FILA (FIFO)
+    int codigoInc = removerDaFilaAtendimento(s);
+    
+    if (codigoInc == -1) {
+        printf("Erro ao remover incidente da fila!\n");
+        pausar();
+        return;
+    }
+    
+    // Procurar o incidente na lista
     NodeIncidente *atual = s->incidentes;
-
+    NodeIncidente *encontrado = NULL;
+    
     while (atual != NULL) {
-
-        if (atual->dados.estado == PENDENTE) {
-
-            printf("\n=========== PROCESSAMENTO DE INCIDENTE ===========\n");
-
-            printf("Incidente selecionado : %d\n",
-                   atual->dados.codigo);
-
-            printf("Equipamento           : %d\n",
-                   atual->dados.codigoEquipamento);
-
-            printf("Descricao             : %s\n",
-                   atual->dados.descricao);
-
-            printf("Data abertura         : %s\n",
-                   atual->dados.dataAbertura);
-
-            /* ALTERAR ESTADO */
-
-#ifdef EM_CURSO
-            atual->dados.estado = EM_CURSO;
-            printf("Novo estado           : EM CURSO\n");
-#else
-            printf("Estado                : EM CURSO (simulado)\n");
-#endif
-
-            printf("==================================================\n");
-
-            guardarFicheiro(s);
-
-            return;
+        if (atual->dados.codigo == codigoInc) {
+            encontrado = atual;
+            break;
         }
-
         atual = atual->proximo;
     }
-
-    printf("Nao existem incidentes pendentes.\n");
+    
+    if (encontrado == NULL) {
+        printf("Incidente #%d nao encontrado!\n", codigoInc);
+        pausar();
+        return;
+    }
+    
+    // Alterar estado para EM_CURSO
+    encontrado->dados.estado = EM_CURSO;
+    
+    printf("\n================================================\n");
+    printf(" INCIDENTE EM PROCESSAMENTO\n");
+    printf("================================================\n");
+    printf("ID do incidente: #%d\n", encontrado->dados.codigo);
+    printf("Equipamento: %d\n", encontrado->dados.codigoEquipamento);
+    printf("Descricao: %s\n", encontrado->dados.descricao);
+    printf("Prioridade: %s\n", encontrado->dados.prioridade == 1 ? "ALTA" : 
+           (encontrado->dados.prioridade == 2 ? "MEDIA" : "BAIXA"));
+    printf("NOVO ESTADO: EM CURSO\n");
+    printf("================================================\n");
+    
+    // Registar no log
+    FILE *log = fopen("log_monitorizacao.txt", "a");
+    if (log != NULL) {
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char dataHora[50];
+        strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
+        fprintf(log, "[%s] Incidente #%d iniciado (EM CURSO)\n", dataHora, codigoInc);
+        fclose(log);
+    }
+    
+    guardarFicheiro(s);
+    pausar();
 }
 
-void resolverEConcluirIncidenteDataHora(Sistema *s){
+void resolverEConcluirIncidenteDataHora(Sistema *s) {
     
     if (s->incidentes == NULL) {
-        printf("Nao existem incidentes.\n");
+        printf("Nao existem incidentes registados.\n");
+        pausar();
         return;
     }
-
-    int codigo;
-
-    printf("Codigo do incidente a resolver: ");
-    scanf("%d", &codigo);
-    limparBufferLocal();
-
+    
+    int codigo = lerInteiro("Insira o codigo do incidente a concluir", 1, 9999);
+    
     NodeIncidente *atual = s->incidentes;
-
+    NodeIncidente *encontrado = NULL;
+    
     while (atual != NULL) {
-
         if (atual->dados.codigo == codigo) {
-
-            if (atual->dados.estado == RESOLVIDO) {
-                printf("Este incidente ja esta resolvido.\n");
-                return;
-            }
-
-            atual->dados.estado = RESOLVIDO;
-
-            obterDataAtual(atual->dados.dataFecho);
-
-            guardarFicheiro(s);
-
-            printf("\n=========== INCIDENTE RESOLVIDO ===========\n");
-            printf("Codigo      : %d\n", atual->dados.codigo);
-            printf("Equipamento : %d\n", atual->dados.codigoEquipamento);
-            printf("Descricao   : %s\n", atual->dados.descricao);
-            printf("Aberto em   : %s\n", atual->dados.dataAbertura);
-            printf("Fechado em  : %s\n", atual->dados.dataFecho);
-            printf("Estado      : RESOLVIDO\n");
-            printf("===========================================\n");
-
-            return;
+            encontrado = atual;
+            break;
         }
-
         atual = atual->proximo;
     }
-
-    printf("Incidente nao encontrado.\n");
+    
+    if (encontrado == NULL) {
+        printf("Incidente #%d nao encontrado!\n", codigo);
+        pausar();
+        return;
+    }
+    
+    if (encontrado->dados.estado == RESOLVIDO) {
+        printf("Este incidente ja foi concluido anteriormente!\n");
+        pausar();
+        return;
+    }
+    
+    // Concluir incidente
+    encontrado->dados.estado = RESOLVIDO;
+    obterDataAtual(encontrado->dados.dataFecho);
+    
+    printf("\n================================================\n");
+    printf("✅ INCIDENTE CONCLUIDO\n");
+    printf("================================================\n");
+    printf("ID do incidente: #%d\n", encontrado->dados.codigo);
+    printf("Equipamento: %d\n", encontrado->dados.codigoEquipamento);
+    printf("Descricao: %s\n", encontrado->dados.descricao);
+    printf("Data abertura: %s\n", encontrado->dados.dataAbertura);
+    printf("Data fecho: %s\n", encontrado->dados.dataFecho);
+    printf("Estado: RESOLVIDO\n");
+    printf("================================================\n");
+    
+    // Registar no log
+    FILE *log = fopen("log_monitorizacao.txt", "a");
+    if (log != NULL) {
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char dataHora[50];
+        strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
+        fprintf(log, "[%s] Incidente #%d concluido (RESOLVIDO)\n", dataHora, codigo);
+        fclose(log);
+    }
+    
+    guardarFicheiro(s);
+    pausar();
 }
 
 void listarIncidentesPendentes(const Sistema *s) {
-
-    if (s == NULL || s->incidentes == NULL) {
-        printf("Nao existem incidentes registados.\n");
+    
+    printf("\n=========== INCIDENTES PENDENTES ===========\n");
+    
+    if (s->incidentes == NULL) {
+        printf("Nenhum incidente registado.\n");
+        pausar();
         return;
     }
-
+    
     NodeIncidente *atual = s->incidentes;
     int count = 0;
-
-    printf("\n=========== INCIDENTES PENDENTES ===========\n");
-
+    
     while (atual != NULL) {
-
         if (atual->dados.estado == PENDENTE) {
-
-            printf("\nCodigo incidente : %d\n", atual->dados.codigo);
-            printf("Equipamento      : %d\n", atual->dados.codigoEquipamento);
-            printf("Descricao        : %s\n", atual->dados.descricao);
-            printf("Data abertura    : %s\n", atual->dados.dataAbertura);
+            printf("\n#%d | Equip: %d | Prioridade: %s | Aberto: %s\n",
+                   atual->dados.codigo,
+                   atual->dados.codigoEquipamento,
+                   atual->dados.prioridade == 1 ? "ALTA" : 
+                   (atual->dados.prioridade == 2 ? "MEDIA" : "BAIXA"),
+                   atual->dados.dataAbertura);
+            printf("   Desc: %s\n", atual->dados.descricao);
             printf("-------------------------------------------\n");
-
             count++;
         }
-
         atual = atual->proximo;
     }
-
+    
     if (count == 0) {
         printf("Nenhum incidente pendente.\n");
     } else {
-        printf("\nTotal de incidentes pendentes: %d\n", count);
+        printf("\nTotal: %d incidente(s) pendente(s)\n", count);
     }
+    pausar();
 }
 
 void listarIncidentesEmCurso(const Sistema *s) {
-
-    if (s == NULL || s->incidentes == NULL) {
-        printf("Nao existem incidentes registados.\n");
+    
+    printf("\n=========== INCIDENTES EM CURSO ===========\n");
+    
+    if (s->incidentes == NULL) {
+        printf("Nenhum incidente registado.\n");
+        pausar();
         return;
     }
-
+    
     NodeIncidente *atual = s->incidentes;
     int count = 0;
-
-    printf("\n=========== INCIDENTES EM CURSO (SIMULADO) ===========\n");
-
+    
     while (atual != NULL) {
-
-        /* Simulação: tratamos como "em curso" os pendentes */
-        if (atual->dados.estado == PENDENTE) {
-
-            printf("\nCodigo incidente : %d\n", atual->dados.codigo);
-            printf("Equipamento      : %d\n", atual->dados.codigoEquipamento);
-            printf("Descricao        : %s\n", atual->dados.descricao);
-            printf("Data abertura    : %s\n", atual->dados.dataAbertura);
-            printf("Estado           : EM CURSO (simulado)\n");
+        if (atual->dados.estado == EM_CURSO) {
+            printf("\n#%d | Equip: %d | Prioridade: %s | Iniciado: %s\n",
+                   atual->dados.codigo,
+                   atual->dados.codigoEquipamento,
+                   atual->dados.prioridade == 1 ? "ALTA" : 
+                   (atual->dados.prioridade == 2 ? "MEDIA" : "BAIXA"),
+                   atual->dados.dataAbertura);
+            printf("   Desc: %s\n", atual->dados.descricao);
             printf("-------------------------------------------\n");
-
             count++;
         }
-
         atual = atual->proximo;
     }
-
+    
     if (count == 0) {
         printf("Nenhum incidente em curso.\n");
     } else {
-        printf("\nTotal em curso: %d\n", count);
+        printf("\nTotal: %d incidente(s) em curso\n", count);
     }
+    pausar();
 }
 
 void listarIncidentesConcluidos(const Sistema *s) {
-
-    if (s == NULL || s->incidentes == NULL) {
-        printf("Nao existem incidentes registados.\n");
+    
+    printf("\n=========== INCIDENTES CONCLUIDOS ===========\n");
+    
+    if (s->incidentes == NULL) {
+        printf("Nenhum incidente registado.\n");
+        pausar();
         return;
     }
-
+    
     NodeIncidente *atual = s->incidentes;
     int count = 0;
-
-    printf("\n=========== INCIDENTES CONCLUIDOS ===========\n");
-
+    
     while (atual != NULL) {
-
         if (atual->dados.estado == RESOLVIDO) {
-
-            printf("\nCodigo incidente : %d\n", atual->dados.codigo);
-            printf("Equipamento      : %d\n", atual->dados.codigoEquipamento);
-            printf("Descricao        : %s\n", atual->dados.descricao);
-            printf("Data abertura    : %s\n", atual->dados.dataAbertura);
-            printf("Data fecho       : %s\n", atual->dados.dataFecho);
-            printf("Estado           : RESOLVIDO\n");
+            printf("\n#%d | Equip: %d | Aberto: %s | Fechado: %s\n",
+                   atual->dados.codigo,
+                   atual->dados.codigoEquipamento,
+                   atual->dados.dataAbertura,
+                   atual->dados.dataFecho);
+            printf("   Desc: %s\n", atual->dados.descricao);
             printf("-------------------------------------------\n");
-
             count++;
         }
-
         atual = atual->proximo;
     }
-
+    
     if (count == 0) {
         printf("Nenhum incidente concluido.\n");
     } else {
-        printf("\nTotal concluidos: %d\n", count);
+        printf("\nTotal: %d incidente(s) concluido(s)\n", count);
     }
+    pausar();
 }
 
 void listarIncidentesPorEntidade(Sistema *s, char *entidadeId) {
-
-    if (s == NULL || s->incidentes == NULL) {
-        printf("Nao existem incidentes registados.\n");
+    
+    int codigo = atoi(entidadeId);
+    
+    printf("\n=========== INCIDENTES DO EQUIPAMENTO %d ===========\n", codigo);
+    
+    if (s->incidentes == NULL) {
+        printf("Nenhum incidente registado.\n");
+        pausar();
         return;
     }
-
-    int codigo = atoi(entidadeId);
-
+    
     NodeIncidente *atual = s->incidentes;
     int count = 0;
-
-    printf("\n=========== INCIDENTES DO EQUIPAMENTO %d ===========\n", codigo);
-
+    
     while (atual != NULL) {
-
         if (atual->dados.codigoEquipamento == codigo) {
-
-            printf("\nCodigo incidente : %d\n", atual->dados.codigo);
-            printf("Descricao        : %s\n", atual->dados.descricao);
-            printf("Estado           : %s\n",
-                   (atual->dados.estado == PENDENTE) ? "PENDENTE" : "RESOLVIDO");
-            printf("Data abertura    : %s\n", atual->dados.dataAbertura);
-            printf("Data fecho       : %s\n", atual->dados.dataFecho);
+            printf("\n#%d | Estado: ", atual->dados.codigo);
+            switch(atual->dados.estado) {
+                case PENDENTE: printf("PENDENTE"); break;
+                case EM_CURSO: printf("EM CURSO"); break;
+                case RESOLVIDO: printf("RESOLVIDO"); break;
+                default: printf("DESCONHECIDO");
+            }
+            printf(" | Prioridade: %s\n", 
+                   atual->dados.prioridade == 1 ? "ALTA" : 
+                   (atual->dados.prioridade == 2 ? "MEDIA" : "BAIXA"));
+            printf("   Desc: %s\n", atual->dados.descricao);
+            printf("   Aberto: %s\n", atual->dados.dataAbertura);
+            if (atual->dados.estado == RESOLVIDO) {
+                printf("   Fechado: %s\n", atual->dados.dataFecho);
+            }
             printf("-------------------------------------------\n");
-
             count++;
         }
-
         atual = atual->proximo;
     }
-
+    
     if (count == 0) {
-        printf("Nenhum incidente encontrado para este equipamento.\n");
+        printf("Nenhum incidente encontrado para o equipamento %d.\n", codigo);
     } else {
-        printf("\nTotal encontrados: %d\n", count);
+        printf("\nTotal: %d incidente(s)\n", count);
     }
+    pausar();
 }
 
 void listarIncidentesPorPrioridadeComParam(Sistema *s, int prioridade) {
-
-    if (s == NULL || s->incidentes == NULL) {
-        printf("Nao existem incidentes registados.\n");
+    
+    const char *nomePrioridade;
+    switch(prioridade) {
+        case 1: nomePrioridade = "ALTA"; break;
+        case 2: nomePrioridade = "MEDIA"; break;
+        case 3: nomePrioridade = "BAIXA"; break;
+        default: nomePrioridade = "DESCONHECIDA";
+    }
+    
+    printf("\n=========== INCIDENTES COM PRIORIDADE %s ===========\n", nomePrioridade);
+    
+    if (s->incidentes == NULL) {
+        printf("Nenhum incidente registado.\n");
+        pausar();
         return;
     }
-
+    
     NodeIncidente *atual = s->incidentes;
     int count = 0;
-
-    printf("\n=========== INCIDENTES POR PRIORIDADE (%d) ===========\n", prioridade);
-
+    
     while (atual != NULL) {
-
-        int mostrar = 0;
-
-        if (prioridade == 1) {
-            // Baixa prioridade = resolvidos
-            if (atual->dados.estado == RESOLVIDO)
-                mostrar = 1;
-        }
-        else if (prioridade == 2) {
-            // Média = pendentes normais
-            if (atual->dados.estado == PENDENTE)
-                mostrar = 1;
-        }
-        else if (prioridade == 3) {
-            // Alta = pendentes antigos (simulação simples)
-            if (atual->dados.estado == PENDENTE)
-                mostrar = 1;
-        }
-
-        if (mostrar) {
-
-            printf("\nCodigo incidente : %d\n", atual->dados.codigo);
-            printf("Equipamento      : %d\n", atual->dados.codigoEquipamento);
-            printf("Descricao        : %s\n", atual->dados.descricao);
-            printf("Estado           : %s\n",
-                   (atual->dados.estado == PENDENTE) ? "PENDENTE" : "RESOLVIDO");
-            printf("Data abertura    : %s\n", atual->dados.dataAbertura);
+        if (atual->dados.prioridade == prioridade) {
+            printf("\n#%d | Equip: %d | Estado: ", 
+                   atual->dados.codigo, atual->dados.codigoEquipamento);
+            switch(atual->dados.estado) {
+                case PENDENTE: printf("PENDENTE"); break;
+                case EM_CURSO: printf("EM CURSO"); break;
+                case RESOLVIDO: printf("RESOLVIDO"); break;
+            }
+            printf("\n   Desc: %s\n", atual->dados.descricao);
+            printf("   Aberto: %s\n", atual->dados.dataAbertura);
             printf("-------------------------------------------\n");
-
             count++;
         }
-
         atual = atual->proximo;
     }
-
+    
     if (count == 0) {
-        printf("Nenhum incidente encontrado para esta prioridade.\n");
+        printf("Nenhum incidente com prioridade %s.\n", nomePrioridade);
     } else {
-        printf("\nTotal encontrados: %d\n", count);
+        printf("\nTotal: %d incidente(s)\n", count);
     }
+    pausar();
 }
 
 void guardarCarregarIncidentesFicheiroBinario(Sistema *s) {
-
-    int opcao;
-
-    printf("\n1. Guardar\n2. Carregar\nOpcao: ");
-    scanf("%d", &opcao);
-    limparBufferLocal();
-
-    /* ========================= */
-    /*          GUARDAR         */
-    /* ========================= */
+    
+    int opcao = lerInteiro("\n1. Guardar incidentes\n2. Carregar incidentes\nOpcao", 1, 2);
+    
     if (opcao == 1) {
-
+        // GUARDAR
         FILE *f = fopen("incidentes.dat", "wb");
-
         if (f == NULL) {
-            printf("Erro ao abrir ficheiro para escrita.\n");
+            printf("[ERRO] Nao foi possivel abrir o ficheiro para guardar!\n");
+            pausar();
             return;
         }
-
-        /* opcional: guardar quantidade */
+        
+        // Guardar total
         fwrite(&s->totalIncidentes, sizeof(int), 1, f);
-
+        
+        // Percorrer lista e guardar cada incidente
         NodeIncidente *atual = s->incidentes;
-
         while (atual != NULL) {
             fwrite(&atual->dados, sizeof(Incidente), 1, f);
             atual = atual->proximo;
         }
-
+        
         fclose(f);
-
-        printf("Incidentes guardados com sucesso.\n");
-    }
-
-    /* ========================= */
-    /*          CARREGAR        */
-    /* ========================= */
-    else if (opcao == 2) {
-
+        printf("✅ Incidentes guardados com sucesso em 'incidentes.dat'\n");
+        
+    } else if (opcao == 2) {
+        // CARREGAR
         FILE *f = fopen("incidentes.dat", "rb");
-
         if (f == NULL) {
-            printf("Erro ao abrir ficheiro para leitura.\n");
+            printf("[ERRO] Nao foi possivel abrir o ficheiro para carregar!\n");
+            pausar();
             return;
         }
-
-        /* limpar lista atual */
+        
+        // Limpar lista atual de incidentes
         NodeIncidente *atual = s->incidentes;
-
         while (atual != NULL) {
-            NodeIncidente *tmp = atual;
+            NodeIncidente *temp = atual;
             atual = atual->proximo;
-            free(tmp);
+            free(temp);
         }
-
         s->incidentes = NULL;
         s->totalIncidentes = 0;
-
-        int total = 0;
-
-        /* ler quantidade (se existir) */
+        
+        // Ler total
+        int total;
         if (fread(&total, sizeof(int), 1, f) != 1) {
             printf("Ficheiro vazio ou corrompido.\n");
             fclose(f);
+            pausar();
             return;
         }
-
+        
+        // Ler incidentes (serão carregados pela ordem inversa)
         for (int i = 0; i < total; i++) {
-
             Incidente temp;
-
             if (fread(&temp, sizeof(Incidente), 1, f) != 1) {
                 break;
             }
-
-            NodeIncidente *novo = malloc(sizeof(NodeIncidente));
-
-            if (!novo) {
-                printf("Erro de memoria.\n");
+            
+            NodeIncidente *novo = (NodeIncidente*)malloc(sizeof(NodeIncidente));
+            if (novo == NULL) {
+                printf("[ERRO] Falha de memoria ao carregar!\n");
                 fclose(f);
+                pausar();
                 return;
             }
-
+            
             novo->dados = temp;
             novo->proximo = s->incidentes;
             s->incidentes = novo;
-
             s->totalIncidentes++;
+            
+            // Atualizar próximo código
+            if (temp.codigo >= s->proximoCodigoInc) {
+                s->proximoCodigoInc = temp.codigo + 1;
+            }
         }
-
+        
         fclose(f);
-
-        printf("Incidentes carregados com sucesso (%d).\n", s->totalIncidentes);
+        printf(" Incidentes carregados com sucesso! Total: %d\n", s->totalIncidentes);
     }
-
-    else {
-        printf("Opcao invalida.\n");
-    }
+    
+    pausar();
 }
 
 void outrasAtividadesRelevantes(Sistema *s) {
-      int opcao;
-
+    
+    int opcao;
+    
     do {
-
-        printf("\n=========== MODULO 4 - FERRAMENTAS EXTRA ===========\n");
-        printf("1. Resumo da fila de incidentes\n");
-        printf("2. Detectar incidentes criticos (pendentes antigos)\n");
-        printf("3. Estatisticas de atendimento\n");
-        printf("4. Simular prioridade automatica\n");
-        printf("5. Verificar backlog (fila acumulada)\n");
-        printf("6. Limpar incidentes resolvidos antigos\n");
+        printf("\n================================================\n");
+        printf("        ATIVIDADES EXTRA - INCIDENTES           \n");
+        printf("================================================\n");
+        printf("1. Estatisticas gerais de incidentes\n");
+        printf("2. Limpar incidentes resolvidos antigos\n");
+        printf("3. Mostrar resumo da fila de atendimento\n");
+        printf("4. Reordenar fila por prioridade\n");
         printf("0. Voltar\n");
+        printf("================================================\n");
         printf("Opcao: ");
-
-        scanf("%d", &opcao);
-        limparBufferLocal();
-
-        switch (opcao) {
-
-        /* ========================================= */
-        case 1: {
-
-            int pend = 0;
-            NodeIncidente *i = s->incidentes;
-
-            while (i) {
-                if (i->dados.estado == PENDENTE)
-                    pend++;
-                i = i->proximo;
-            }
-
-            printf("\n--- RESUMO FILA ---\n");
-            printf("Total incidentes: %d\n", s->totalIncidentes);
-            printf("Pendentes       : %d\n", pend);
-            printf("Resolvidos      : %d\n",
-                   s->totalIncidentes - pend);
-
-            break;
+        
+        if (scanf("%d", &opcao) != 1) {
+            printf("Opcao invalida!\n");
+            limparBuffer();
+            continue;
         }
-
-        /* ========================================= */
-        case 2: {
-
-            printf("\n--- INCIDENTES CRITICOS (SIMULADO) ---\n");
-
-            NodeIncidente *i = s->incidentes;
-            int count = 0;
-
-            while (i) {
-
-                if (i->dados.estado == PENDENTE) {
-
-                    printf("CRITICO -> %d | %s\n",
-                           i->dados.codigo,
-                           i->dados.descricao);
-
-                    count++;
+        limparBuffer();
+        
+        switch(opcao) {
+            case 1: {
+                // Estatisticas
+                int pendentes = 0, emCurso = 0, resolvidos = 0;
+                NodeIncidente *atual = s->incidentes;
+                while (atual != NULL) {
+                    switch(atual->dados.estado) {
+                        case PENDENTE: pendentes++; break;
+                        case EM_CURSO: emCurso++; break;
+                        case RESOLVIDO: resolvidos++; break;
+                    }
+                    atual = atual->proximo;
                 }
-
-                i = i->proximo;
-            }
-
-            if (count == 0)
-                printf("Nenhum incidente critico.\n");
-
-            break;
-        }
-
-        /* ========================================= */
-        case 3: {
-
-            if (s->totalIncidentes == 0) {
-                printf("Sem dados.\n");
+                
+                printf("\n--- ESTATISTICAS DE INCIDENTES ---\n");
+                printf("Total: %d\n", s->totalIncidentes);
+                printf("Pendentes: %d\n", pendentes);
+                printf("Em Curso: %d\n", emCurso);
+                printf("Resolvidos: %d\n", resolvidos);
+                if (s->totalIncidentes > 0) {
+                    printf("Taxa de resolucao: %.1f%%\n", 
+                           (resolvidos * 100.0) / s->totalIncidentes);
+                }
                 break;
             }
-
-            NodeIncidente *i = s->incidentes;
-            int resolvidos = 0;
-
-            while (i) {
-                if (i->dados.estado == RESOLVIDO)
-                    resolvidos++;
-                i = i->proximo;
-            }
-
-            float taxa = (resolvidos * 100.0) / s->totalIncidentes;
-
-            printf("\n--- ESTATISTICAS ---\n");
-            printf("Taxa de resolucao: %.2f%%\n", taxa);
-
-            if (taxa > 80)
-                printf("Desempenho: BOM\n");
-            else if (taxa > 50)
-                printf("Desempenho: MEDIO\n");
-            else
-                printf("Desempenho: CRITICO\n");
-
-            break;
-        }
-
-        /* ========================================= */
-        case 4: {
-
-            printf("\n--- SIMULACAO PRIORIDADE ---\n");
-
-            NodeIncidente *i = s->incidentes;
-
-            while (i) {
-
-                if (i->dados.estado == PENDENTE) {
-
-                    printf("Incidente %d -> PRIORIDADE ALTA\n",
-                           i->dados.codigo);
+            case 2: {
+                // Limpar resolvidos antigos
+                NodeIncidente *atual = s->incidentes;
+                NodeIncidente *anterior = NULL;
+                int removidos = 0;
+                
+                while (atual != NULL) {
+                    if (atual->dados.estado == RESOLVIDO) {
+                        NodeIncidente *temp = atual;
+                        if (anterior == NULL) {
+                            s->incidentes = atual->proximo;
+                            atual = s->incidentes;
+                        } else {
+                            anterior->proximo = atual->proximo;
+                            atual = atual->proximo;
+                        }
+                        free(temp);
+                        s->totalIncidentes--;
+                        removidos++;
+                    } else {
+                        anterior = atual;
+                        atual = atual->proximo;
+                    }
                 }
-
-                i = i->proximo;
+                printf("Removidos %d incidentes resolvidos.\n", removidos);
+                guardarFicheiro(s);
+                break;
             }
-
-            break;
-        }
-
-        /* ========================================= */
-        case 5: {
-
-            printf("\n--- BACKLOG (FILA ACUMULADA) ---\n");
-
-            int count = 0;
-            NodeIncidente *i = s->incidentes;
-
-            while (i) {
-
-                if (i->dados.estado == PENDENTE)
-                    count++;
-
-                i = i->proximo;
+            case 3: {
+                // Resumo da fila
+                listarFilaAtendimento(s);
+                break;
             }
-
-            printf("Incidentes em espera: %d\n", count);
-
-            if (count > 10)
-                printf("ALERTA: Backlog elevado!\n");
-
-            break;
-        }
-
-        /* ========================================= */
-        case 6: {
-
-            printf("\n--- LIMPAR RESOLVIDOS ANTIGOS ---\n");
-
-            NodeIncidente *i = s->incidentes;
-            NodeIncidente *ant = NULL;
-
-            while (i) {
-
-                if (i->dados.estado == RESOLVIDO) {
-
-                    NodeIncidente *tmp = i;
-
-                    if (ant == NULL)
-                        s->incidentes = i->proximo;
-                    else
-                        ant->proximo = i->proximo;
-
-                    i = i->proximo;
-                    free(tmp);
-                    s->totalIncidentes--;
-
-                } else {
-                    ant = i;
-                    i = i->proximo;
-                }
+            case 4: {
+                printf("Funcao de reordenacao por prioridade (extra).\n");
+                break;
             }
-
-            printf("Limpeza concluida.\n");
-            break;
+            case 0:
+                printf("A voltar...\n");
+                break;
+            default:
+                printf("Opcao invalida!\n");
         }
-
-        case 0:
-            printf("A voltar...\n");
-            break;
-
-        default:
-            printf("Opcao invalida!\n");
+        
+        if (opcao != 0 && opcao != 3) {
+            pausar();
         }
-
-    } while (opcao != 0);
+        
+    } while(opcao != 0);
 }
-
-
-
-
-
-

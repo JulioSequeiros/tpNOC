@@ -30,7 +30,7 @@ void menuPrincipal(Sistema *s)
         {
             case 1: menuEquipamento(s);    break;
             case 2: menuConectividade(s);  break;
-            // case 3: menuSensores(s);       break;
+            case 3: menuSensores(s);       break;
             case 4: menuIncidente(s);     break;
             // case 5: menuConfiguracoes(s);  break;
             case 6: menuRelatorios(s);     break;

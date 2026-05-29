@@ -10,21 +10,21 @@ void menuPrincipal(Sistema *s)
     do
     {
         limparEcra();
-        printf("\n  ============================================================\n");
-        printf("  |   NOC - Network Operations Center                       |\n");
-        printf("  ============================================================\n");
-        printf("  |  1. Inventario de Equipamentos  [M1]                   |\n");
-        printf("  |  2. Conectividade               [M2]                   |\n");
-        printf("  |  3. Sensores                    [M3]                   |\n");
-        printf("  |  4. Incidentes                  [M4]                   |\n");
-        printf("  |  5. Configuracoes               [M5]                   |\n");
-        printf("  |  6. Relatorios                  [M6]                   |\n");
-        printf("  |  7. Ficheiros                                         |\n");
-        printf("  |  0. Sair                                              |\n");
-        printf("  ============================================================\n");
-        printf("  Equipamentos: %-4d  Incidentes: %-4d  Configuracoes: %d\n",
-               s->totalEquipamentos, s->totalIncidentes, s->totalConfiguracoes);
-
+        printf("\n  ╔══════════════════════════════════════════════════════════════════╗\n");
+        printf("  ║   NOC - Network Operations Center                                ║\n");
+        printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
+        printf("  ║  1. Inventario de Equipamentos  [M1]                             ║\n");
+        printf("  ║  2. Conectividade               [M2]                             ║\n");
+        printf("  ║  3. Sensores                    [M3]                             ║\n");
+        printf("  ║  4. Incidentes                  [M4]                             ║\n");
+        printf("  ║  5. Configuracoes               [M5]                             ║\n");
+        printf("  ║  6. Relatorios                  [M6]                             ║\n");
+        printf("  ║  7. Ficheiros                                                    ║\n");
+        printf("  ║  0. Sair                                                         ║\n");
+        printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
+        printf("  ║  Equipamentos: %-4d   Incidentes: %-4d   Configuracoes: %-4d     ║\n",
+                    s->totalEquipamentos, s->totalIncidentes, s->totalConfiguracoes);
+        printf("  ╚══════════════════════════════════════════════════════════════════╝\n");
         opcao = lerInteiro("  Opcao", 0, 7);
         switch (opcao)
         {

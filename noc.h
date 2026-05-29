@@ -117,7 +117,7 @@ typedef struct NodeEquipamento {
 
 // Modulo 3 - Sensor (versão completa)
 typedef struct Sensor {
-    int codigo;
+    char codigo[MAX_COD_SENSOR];
     int codigoEquipamento;
     char tipo[50];          // temperatura, humidade, corrente, etc.
     float valorMinimo;
@@ -135,7 +135,7 @@ typedef struct NodeSensor {
 
 // Modulo 3 - LeituraSensor (para histórico)
 typedef struct LeituraSensor {
-    int codigo;
+    char codigo[MAX_COD_SENSOR];
     char tipo[50];
     float valor;
     char unidade[10];

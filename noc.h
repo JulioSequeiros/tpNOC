@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 /* ================= CONSTANTES ================= */
 
@@ -117,7 +118,7 @@ typedef struct NodeEquipamento {
 
 // Modulo 3 - Sensor (versão completa)
 typedef struct Sensor {
-    int codigo;
+    char codigo[MAX_COD_SENSOR];
     int codigoEquipamento;
     char tipo[50];          // temperatura, humidade, corrente, etc.
     float valorMinimo;

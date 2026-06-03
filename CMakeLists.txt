@@ -11,4 +11,5 @@ add_executable(tpNOC
         module_4.c
         module_6.c
         util.c
+        module_5.c
 )

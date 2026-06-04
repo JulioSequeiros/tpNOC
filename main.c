@@ -1,4 +1,7 @@
 #include "noc.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // ============================================================
 //  MENU PRINCIPAL
@@ -10,6 +13,7 @@ void menuPrincipal(Sistema *s)
     do
     {
         limparEcra();
+        printf("\n");
         printf("\n  ╔══════════════════════════════════════════════════════════════════╗\n");
         printf("  ║   NOC - Network Operations Center                                ║\n");
         printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
@@ -19,11 +23,12 @@ void menuPrincipal(Sistema *s)
         printf("  ║  4. Incidentes                  [M4]                             ║\n");
         printf("  ║  5. Configuracoes               [M5]                             ║\n");
         printf("  ║  6. Relatorios                  [M6]                             ║\n");
-        printf("  ║  7. Ficheiros                                                    ║\n");
+        printf("  ║  7. Perfil / Conta                                               ║\n");
         printf("  ║  0. Sair                                                         ║\n");
         printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
-        printf("  ║  Equipamentos: %-4d   Incidentes: %-4d   Configuracoes: %-4d     ║\n",
-                    s->totalEquipamentos, s->totalIncidentes, s->totalConfiguracoes);
+        printf("  ║  Equip: %-4d  Incidentes: %-4d  Config: %-4d  Tecnico: %-16s║\n",
+                    s->totalEquipamentos, s->totalIncidentes,
+                    s->totalConfiguracoes, s->tecnicoLogado);
         printf("  ╚══════════════════════════════════════════════════════════════════╝\n");
         opcao = lerInteiro("  Opcao", 0, 7);
         switch (opcao)
@@ -31,10 +36,10 @@ void menuPrincipal(Sistema *s)
             case 1: menuEquipamento(s);    break;
             case 2: menuConectividade(s);  break;
             case 3: menuSensores(s);       break;
-            case 4: menuIncidente(s);     break;
-            // case 5: menuConfiguracoes(s);  break;
+            case 4: menuIncidente(s);      break;
+            case 5: menuConfiguracoes(s);  break;
             case 6: menuRelatorios(s);     break;
-            // case 7: menuFicheiro(s);       break;
+            case 7: menuGestaoPerfil(s);   break;
             case 0: break;
         }
     } while (opcao != 0);
@@ -49,6 +54,11 @@ int main(void)
     Sistema s;
     memset(&s, 0, sizeof(Sistema));
 
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+
     // Inicializar contadores
     s.proximoCodigoEquip = 1;
     s.proximoCodigoInc   = 1;
@@ -57,7 +67,29 @@ int main(void)
     // Inicializar fila de atendimento (Módulo 4)
     inicializarFilaAtendimento(&s);
 
+    // Autenticação — bloqueia ate login valido
+    inicializarTecnicos();
+    if (!autenticarTecnico(&s)) return 1;
+
+    // Req 1 — carregar dados existentes dos ficheiros binários
+    printf("\n  A carregar dados...\n");
+    carregarEquipameto(&s);
+    carregarSensoresFicheiro(&s);
+    carregarConfiguracoesFicheiro(&s);
+
     menuPrincipal(&s);
+
+    // Req 14 — guardar dados antes de sair
+    printf("\n  Guardar dados antes de sair? (1-Sim  2-Nao): ");
+    int opcaoGuardar;
+    char lixo;
+    if (scanf("%d%c", &opcaoGuardar, &lixo) == 2 && opcaoGuardar == 1)
+    {
+        guardarEquipamento(&s);
+        guardarSensoresFicheiro(&s);
+        guardarConfiguracoesFicheiro(&s);
+        printf("  [OK] Dados guardados.\n");
+    }
 
     // Libertar memoria — equipamentos
     NodeEquipamento *eq = s.equipamentos;

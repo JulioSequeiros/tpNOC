@@ -32,6 +32,7 @@
 #define FICH_INCIDENTES     "incidentes.dat"
 #define FICH_CONFIGURACOES  "configuracoes.dat"
 #define FICH_SENSORES_DAT   "leituras_sensores.dat"
+#define FICH_TECNICOS       "tecnicos.dat"
 
 // Texto
 #define FICH_PING           "resultado_ping.txt"
@@ -256,7 +257,17 @@ typedef struct Sistema {
     FilaAtendimento *filaAtendimentoPtr;
     FilaAtendimento *filaAtendimentoTras;
 
+    // Autenticação — técnico com sessão activa
+    char tecnicoLogado[MAX_TECNICO];
+
 } Sistema;
+
+// Credencial de técnico (guardada em ficheiro binário)
+typedef struct {
+    char         username[MAX_NOME];
+    char         nomeCompleto[MAX_NOME];
+    unsigned int passwordHash;
+} Credencial;
 
 /* ================= ALIASES DE COMPATIBILIDADE ================= */
 #define INC_PENDENTE   PENDENTE
@@ -268,6 +279,11 @@ typedef struct Sistema {
 void menuPrincipal(Sistema *s);
 
 
+
+/* ================= AUTENTICACAO ================= */
+void inicializarTecnicos(void);
+int  autenticarTecnico(Sistema *s);
+void menuGestaoPerfil(Sistema *s);
 
 /* ================= MODULO 1 - EQUIPAMENTOS ================= */
 void adicionarEquipamento(Sistema *s);
@@ -319,6 +335,8 @@ void guardarSensoresFicheiro(const Sistema *s);
 void carregarSensoresFicheiro(Sistema *s);
 void registarLogSensores(const char *mensagem);
 EstadoSensor parseEstadoSensor(const char *str);
+void importarSensoresAPI(Sistema *s);
+void consultarEstadoAPI(void);
 
 
 /* ================= MODULO 4 - INCIDENTES ================= */

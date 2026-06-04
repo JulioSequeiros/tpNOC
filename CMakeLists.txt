@@ -9,7 +9,8 @@ add_executable(tpNOC
         module_2.c
         module_3.c
         module_4.c
-        module_6.c
-        util.c
         module_5.c
+        module_6.c
+        module_auth.c
+        util.c
 )

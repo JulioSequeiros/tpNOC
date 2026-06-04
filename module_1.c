@@ -212,7 +212,7 @@ void imprimirCabecalho(void)
            "Cód.", "Nome", "Tipo", "Marca",
            "IP", "MAC", "Localização", "Estado");
     printf("  ");
-    for (int i = 0; i < 128; i++) printf("-");
+    for (int i = 0; i < 128; i++) printf("═");
     printf("\n");
 }
 
@@ -246,6 +246,18 @@ static void imprimirFichaEquipamento(const Equipamento *e)
  * Operação Logica
  */
 
+static void gerarMAC(int semente, char *mac, int maxLen)
+{
+    unsigned int s = (unsigned int)(time(NULL)) ^ (unsigned int)semente;
+    /* xorshift simples para obter bytes variados */
+    s ^= s << 13; s ^= s >> 17; s ^= s << 5;
+    snprintf(mac, maxLen, "02:%02X:%02X:%02X:%02X:%02X",
+             (s >>  0) & 0xFF, (s >>  8) & 0xFF,
+             (s >> 16) & 0xFF, (s >> 24) & 0xFF,
+             ((s ^ (s >> 11)) >>  4) & 0xFF,
+             ((s ^ (s >>  7)) >> 12) & 0xFF);
+}
+
 // 1. Adicionar equipamento
 void adicionarEquipamento(Sistema *s)
 {
@@ -266,10 +278,11 @@ void adicionarEquipamento(Sistema *s)
     novo.tipo = selecionarTipo();
 
     lerString("Qual é a marca do equipamento?",novo.marca,MAX_MARCA);
-    lerString("Qual é o modelo do equipamento?",novo.marca,MAX_MODELO);
+    lerString("Qual é o modelo do equipamento?",novo.modelo,MAX_MODELO);
 
     lerString("Qual é o IP do equipamento?",novo.ip,MAX_IP);
-    lerString("Qual é o MAC do equipamento?",novo.mac,MAX_MAC);
+    gerarMAC(novo.codigo, novo.mac, MAX_MAC);
+    printf("  MAC gerado automaticamente: %s\n", novo.mac);
     lerString("Qual é a localização do equipamento?",novo.localizacao,MAX_LOCAL);
 
     printf("Qual é o estado operacional do equipamento?");
@@ -356,7 +369,7 @@ void removerEquipamento(Sistema *s)
         return;
     }
 
-    if (atual->proximo == NULL)
+    if (anterior == NULL)
         s->equipamentos = atual->proximo;
     else
         anterior->proximo = atual->proximo;
@@ -403,7 +416,7 @@ void alterarEquipamento(Sistema *s)
 
     printf(" Nome [%s]: ", e->nome);
     fgets(buffer, MAX_DESC, stdin);
-    if (buffer[0] == '\n')
+    if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         strncpy(e->nome, buffer, sizeof(e->nome) - 1);
@@ -415,7 +428,7 @@ void alterarEquipamento(Sistema *s)
 
     printf(" Marca [%s]: ", e->marca);
     fgets(buffer, MAX_DESC, stdin);
-    if (buffer[0] == '\n')
+    if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         strncpy(e->marca, buffer, sizeof(e->marca) - 1);
@@ -433,7 +446,7 @@ void alterarEquipamento(Sistema *s)
 
     printf(" Endereço IP [%s]: ", e->ip);
     fgets(buffer, MAX_DESC, stdin);
-    if (buffer[0] == '\n')
+    if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         strncpy(e->ip, buffer, sizeof(e->ip) - 1);
@@ -442,7 +455,7 @@ void alterarEquipamento(Sistema *s)
 
     printf(" Endereço MAC [%s]: ", e->mac);
     fgets(buffer, MAX_MAC, stdin);
-    if (buffer[0] == '\n')
+    if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         strncpy(e->mac, buffer, sizeof(e->mac) - 1);
@@ -451,7 +464,7 @@ void alterarEquipamento(Sistema *s)
 
     printf(" Localização [%s]: ", e->localizacao);
     fgets(buffer, MAX_LOCAL, stdin);
-    if (buffer[0] == '\n')
+    if (buffer[0] != '\n')
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         strncpy(e->localizacao, buffer, sizeof(e->localizacao) - 1);
@@ -631,7 +644,10 @@ void pesquisarEquipamento(Sistema *s)
         {
             lerString("  Endereço IP: ", termo, MAX_IP);
         }
-        lerString("  Endereço MAC: ", termo, MAX_MAC);
+        else
+        {
+            lerString("  Endereço MAC: ", termo, MAX_MAC);
+        }
 
         NodeEquipamento *atual = s->equipamentos;
         while (atual != NULL)

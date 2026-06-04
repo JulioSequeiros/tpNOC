@@ -113,7 +113,9 @@ void registarConfiguracao(Sistema *s)
         cfg.tipoConfiguracao, MAX_TIPO_CONFIG);
     lerString("  Valor anterior", cfg.valorAnterior, MAX_VALOR);
     lerString("  Novo valor", cfg.novoValor, MAX_VALOR);
-    lerString("  Localizacao", cfg.tecnico, MAX_LOCAL);
+    strncpy(cfg.tecnico, s->tecnicoLogado, MAX_TECNICO - 1);
+    cfg.tecnico[MAX_TECNICO - 1] = '\0';
+    printf("  Tecnico: %s\n", cfg.tecnico);
     obterDataHoraAtual(cfg.dataHora);
 
     empilhar(&s->pilhaConfiguracoes, cfg);
@@ -150,7 +152,7 @@ void consultarUltimaConfiguracao(const Sistema *s)
  * 3. Consultar N configurações mais recentes
  */
 
-void consultarNConfigurações(const Sistema *s)
+void consultarNConfiguracoes(const Sistema *s)
 {
     limparEcra();
     printf("\n  ╔══════════════════════════════════════════════════╗\n");
@@ -234,3 +236,195 @@ void reverterUltimaConfiguracao(Sistema *s)
  *  5. Historico de configurações por equipamento
  */
 
+void consultarHistoricoEquipamento(const Sistema *s)
+{
+    limparEcra();
+    printf("\n  ╔══════════════════════════════════════════════════╗\n");
+    printf("  ║   Historico por Equipamento                      ║\n");
+    printf("  ╚══════════════════════════════════════════════════╝\n\n");
+
+    if (s->pilhaConfiguracoes.topo == NULL) {
+        printf("  [!] Pilha vazia — nenhuma configuracao registada.\n");
+        pausar();
+        return;
+    }
+
+    int cod = lerInteiro("  Codigo do equipamento", 1, s->proximoCodigoEquip - 1);
+
+    int seq = 0;
+    const NodeConfiguracao *atual = s->pilhaConfiguracoes.topo;
+    while (atual != NULL) {
+        if (atual->dados.codigoEquipamento == cod) {
+            seq++;
+            imprimirConfiguracaoDetalhe(&atual->dados, seq);
+        }
+        atual = atual->proximo;
+    }
+
+    if (seq == 0)
+        printf("  [!] Nenhuma configuracao encontrada para o equipamento #%d.\n", cod);
+    else
+        printf("\n  Total: %d configuracao(oes) para equipamento #%d.\n", seq, cod);
+
+    pausar();
+}
+
+/*
+ *  6. Guardar/carregar ficheiro binario
+ */
+
+void guardarConfiguracoesFicheiro(const Sistema *s)
+{
+    int total = s->pilhaConfiguracoes.tamanho;
+
+    FILE *f = fopen(FICH_CONFIGURACOES, "wb");
+    if (f == NULL) {
+        printf("\n  [!] Erro ao abrir o ficheiro \"%s\" para escrita\n", FICH_CONFIGURACOES);
+        return;
+    }
+
+    fwrite(&total, sizeof(int), 1, f);
+
+    if (total > 0)
+    {
+        /* Guardar da mais antiga para a mais recente para que ao carregar
+         * e empilhar sequencialmente o topo seja restaurado corretamente. */
+
+        Configuracao *buf = malloc((size_t)total * sizeof(Configuracao));
+        if (buf == NULL) {
+            fclose(f);
+            printf("  [!] Erro de memoria.\n");
+            return;
+        }
+
+        const NodeConfiguracao *atual = s->pilhaConfiguracoes.topo;
+        for (int i = total - 1; atual != NULL; i--, atual = atual->proximo)
+            buf[i] = atual->dados;
+        fwrite(buf, sizeof(Configuracao), (size_t)total, f);
+        free(buf);
+    }
+
+    fclose(f);
+    printf("  [OK] %d configuracao(oes) guardada(s) em '%s'.\n",
+           total, FICH_CONFIGURACOES);
+}
+
+void carregarConfiguracoesFicheiro(Sistema *s)
+{
+    FILE *f = fopen(FICH_CONFIGURACOES, "rb");
+    if (f == NULL) {
+        printf("  [!] Ficheiro '%s' nao encontrado.\n", FICH_CONFIGURACOES);
+        return;
+    }
+
+    int total;
+    if (fread(&total, sizeof(int), 1, f) != 1 || total < 0) {
+        fclose(f);
+        printf("  [!] Ficheiro corrompido.\n");
+        return;
+    }
+
+    /* Limpar pilha atual */
+    NodeConfiguracao *no = s->pilhaConfiguracoes.topo;
+    while (no) {
+        NodeConfiguracao *tmp = no->proximo;
+        free(no);
+        no = tmp;
+    }
+    s->pilhaConfiguracoes.topo    = NULL;
+    s->pilhaConfiguracoes.tamanho = 0;
+    s->totalConfiguracoes         = 0;
+
+    Configuracao cfg;
+    for (int i = 0; i < total; i++) {
+        if (fread(&cfg, sizeof(Configuracao), 1, f) != 1) break;
+        empilhar(&s->pilhaConfiguracoes, cfg);
+    }
+
+    fclose(f);
+    s->totalConfiguracoes = s->pilhaConfiguracoes.tamanho;
+    printf("  [OK] %d configuracao(oes) carregada(s) de '%s'.\n",
+           s->totalConfiguracoes, FICH_CONFIGURACOES);
+}
+
+/*
+ *  7. Limpar configuracoes
+ */
+
+void limparConfiguracoes(Sistema *s)
+{
+    limparEcra();
+    printf("\n  ╔══════════════════════════════════════════════════╗\n");
+    printf("  ║   Limpar Registo de Configuracoes                ║\n");
+    printf("  ╚══════════════════════════════════════════════════╝\n\n");
+
+    if (s->pilhaConfiguracoes.topo == NULL) {
+        printf("  [!] A pilha ja esta vazia.\n");
+        pausar();
+        return;
+    }
+
+    printf("  [!] Esta operacao elimina %d configuracao(oes). Nao e reversivel.\n\n",
+           s->pilhaConfiguracoes.tamanho);
+
+    int conf = lerInteiro("  Confirmar limpeza? (1-Sim  2-Nao)", 1, 2);
+    if (conf == 2) {
+        printf("  [--] Operacao cancelada.\n");
+        pausar();
+        return;
+    }
+
+    NodeConfiguracao *no = s->pilhaConfiguracoes.topo;
+    while (no) {
+        NodeConfiguracao *tmp = no->proximo;
+        free(no);
+        no = tmp;
+    }
+    s->pilhaConfiguracoes.topo    = NULL;
+    s->pilhaConfiguracoes.tamanho = 0;
+    s->totalConfiguracoes         = 0;
+
+    printf("  [OK] Pilha de configuracoes limpa.\n");
+    pausar();
+}
+
+/*
+ *  8. Menu de configuracoes
+ */
+
+void menuConfiguracoes(Sistema *s)
+{
+    int opcao;
+    do {
+        limparEcra();
+        printf("\n  ╔══════════════════════════════════════════════════╗\n");
+        printf("  ║   M5 — Registo de Configuracoes                  ║\n");
+        printf("  ╠══════════════════════════════════════════════════╣\n");
+        printf("  ║  1. Registar nova configuracao                    ║\n");
+        printf("  ║  2. Consultar ultima configuracao                 ║\n");
+        printf("  ║  3. Consultar N configuracoes mais recentes       ║\n");
+        printf("  ║  4. Reverter ultima configuracao                  ║\n");
+        printf("  ║  5. Historico por equipamento                     ║\n");
+        printf("  ║  6. Guardar configuracoes em ficheiro             ║\n");
+        printf("  ║  7. Carregar configuracoes de ficheiro            ║\n");
+        printf("  ║  8. Limpar configuracoes                          ║\n");
+        printf("  ║  0. Voltar                                        ║\n");
+        printf("  ╠══════════════════════════════════════════════════╣\n");
+        printf("  ║  Configuracoes na pilha: %-4d                     ║\n",
+               s->pilhaConfiguracoes.tamanho);
+        printf("  ╚══════════════════════════════════════════════════╝\n");
+
+        opcao = lerInteiro("  Opcao", 0, 8);
+        switch (opcao) {
+        case 1: registarConfiguracao(s);          break;
+        case 2: consultarUltimaConfiguracao(s);   break;
+        case 3: consultarNConfiguracoes(s);        break;
+        case 4: reverterUltimaConfiguracao(s);    break;
+        case 5: consultarHistoricoEquipamento(s);  break;
+        case 6: guardarConfiguracoesFicheiro(s);  pausar(); break;
+        case 7: carregarConfiguracoesFicheiro(s); pausar(); break;
+        case 8: limparConfiguracoes(s);            break;
+        case 0: break;
+        }
+    } while (opcao != 0);
+}

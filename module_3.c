@@ -373,6 +373,206 @@ void carregarSensoresFicheiro(Sistema *s)
     printf("\n  [OK] %d sensor(es) carregado(s) de \"%s\".\n", total, FICH_SENSORES_DAT);
 }
 
+/* ─── API pública de sensores ───────────────────────────────────────────── */
+
+#define API_LEGACY "https://sensorlab.innominatum.pt/v1/sensors/export/legacy"
+#define API_TXT    "https://sensorlab.innominatum.pt/v1/sensors/export/txt"
+#define FICH_API_TMP "sensores_api_tmp.txt"
+
+static int descarregarAPI(const char *url)
+{
+    char cmd[512];
+#ifdef _WIN32
+    snprintf(cmd, sizeof(cmd),
+             "curl -s --max-time 10 \"%s\" -o \"%s\" 2>nul", url, FICH_API_TMP);
+#else
+    snprintf(cmd, sizeof(cmd),
+             "curl -s --max-time 10 \"%s\" -o \"%s\" 2>/dev/null", url, FICH_API_TMP);
+#endif
+    return system(cmd);
+}
+
+/*
+ * 7. Importar leituras da API
+ */
+void importarSensoresAPI(Sistema *s)
+{
+    limparEcra();
+    printf("\n  Importar Sensores da API\n");
+    printf("  URL: %s\n\n", API_LEGACY);
+    printf("  [*] A ligar...\n");
+    fflush(stdout);
+
+    if (descarregarAPI(API_LEGACY) != 0) {
+        printf("  [!] Erro ao aceder a API. Verifique a ligacao a internet.\n");
+        remove(FICH_API_TMP);
+        pausar();
+        return;
+    }
+
+    FILE *f = fopen(FICH_API_TMP, "r");
+    if (f == NULL) {
+        printf("  [!] Erro ao abrir ficheiro temporario.\n");
+        pausar();
+        return;
+    }
+
+    char linha[256];
+    int importados = 0, atualizados = 0, incidentes = 0;
+
+    while (fgets(linha, sizeof(linha), f) != NULL)
+    {
+        if (linha[0] == '\n' || linha[0] == '#') continue;
+        linha[strcspn(linha, "\n")] = '\0';
+
+        char codSensor[MAX_COD_SENSOR], tipo[50], unidade[20], estado[20];
+        float valor;
+        int campos = sscanf(linha, "%29[^;];%49[^;];%f;%19[^;];%19s",
+                            codSensor, tipo, &valor, unidade, estado);
+        if (campos != 5) continue;
+
+        NodeSensor *existente = encontrarSensorPorCodigo(s, codSensor);
+        if (existente != NULL)
+        {
+            existente->dados.valorAtual = valor;
+            strncpy(existente->dados.estado, estado, sizeof(existente->dados.estado) - 1);
+            obterDataAtual(existente->dados.ultimaLeitura);
+            atualizados++;
+
+            char logMsg[MAX_DESC];
+            snprintf(logMsg, MAX_DESC, "[API] Sensor %s atualizado: %.2f%s [%s]",
+                     codSensor, valor, unidade, estado);
+            registarLogSensores(logMsg);
+
+            if (strcmp(estado, "NORMAL") != 0) {
+                criarIncidenteSensorAuto(s, &existente->dados);
+                incidentes++;
+            }
+        }
+        else
+        {
+            NodeSensor *novo = (NodeSensor *)malloc(sizeof(NodeSensor));
+            if (novo == NULL) continue;
+            memset(novo, 0, sizeof(NodeSensor));
+            strncpy(novo->dados.codigo,  codSensor, MAX_COD_SENSOR - 1);
+            strncpy(novo->dados.tipo,    tipo,       49);
+            strncpy(novo->dados.unidade, unidade,    19);
+            strncpy(novo->dados.estado,  estado,     19);
+            novo->dados.valorAtual        = valor;
+            novo->dados.codigoEquipamento = 0;
+            obterDataAtual(novo->dados.ultimaLeitura);
+            novo->proximo  = s->sensores;
+            s->sensores    = novo;
+            s->totalSensores++;
+            importados++;
+
+            char logMsg[MAX_DESC];
+            snprintf(logMsg, MAX_DESC, "[API] Sensor %s importado: %.2f%s [%s]",
+                     codSensor, valor, unidade, estado);
+            registarLogSensores(logMsg);
+
+            if (strcmp(estado, "NORMAL") != 0) {
+                criarIncidenteSensorAuto(s, &novo->dados);
+                incidentes++;
+            }
+        }
+    }
+
+    fclose(f);
+    remove(FICH_API_TMP);
+
+    printf("  [OK] Importacao da API concluida:\n");
+    printf("       Novos sensores  : %d\n", importados);
+    printf("       Atualizados     : %d\n", atualizados);
+    printf("       Incidentes auto : %d\n", incidentes);
+    pausar();
+}
+
+/*
+ * 8. Consultar estado atual da API (sem importar)
+ */
+void consultarEstadoAPI(void)
+{
+    limparEcra();
+    printf("\n  Estado Atual dos Sensores — API RACK-01\n");
+    printf("  URL: %s\n\n", API_TXT);
+    printf("  [*] A ligar...\n");
+    fflush(stdout);
+
+    if (descarregarAPI(API_TXT) != 0) {
+        printf("  [!] Erro ao aceder a API. Verifique a ligacao a internet.\n");
+        remove(FICH_API_TMP);
+        pausar();
+        return;
+    }
+
+    FILE *f = fopen(FICH_API_TMP, "r");
+    if (f == NULL) {
+        printf("  [!] Erro ao abrir ficheiro temporario.\n");
+        pausar();
+        return;
+    }
+
+    limparEcra();
+    printf("\n  ╔══════════════════════════════════════════════════════════════════╗\n");
+    printf("  ║   ESTADO ATUAL DOS SENSORES — API RACK-01                       ║\n");
+    printf("  ╚══════════════════════════════════════════════════════════════════╝\n");
+
+    char linha[512];
+    int header_done = 0;
+
+    while (fgets(linha, sizeof(linha), f) != NULL)
+    {
+        linha[strcspn(linha, "\n")] = '\0';
+
+        if (linha[0] == '#') {
+            /* Mostrar apenas metadados relevantes */
+            if (strstr(linha, "local_time=") || strstr(linha, "day_profile=") ||
+                strstr(linha, "site=")        || strstr(linha, "rack="))
+                printf("  %s\n", linha + 2);  /* +2 salta "# " */
+            continue;
+        }
+
+        /* Primeira linha nao-comentario = cabecalho */
+        if (!header_done) {
+            header_done = 1;
+            printf("\n  %-14s %-22s %8s %-7s %-10s %s\n",
+                   "Sensor", "Tipo", "Valor", "Unidade", "Estado", "Mensagem");
+            printf("  ");
+            for (int i = 0; i < 85; i++) printf("-");
+            printf("\n");
+            continue;
+        }
+
+        /* Linhas de dados: tokenizar por ';'
+         * Campos (0-indexed): 0=timestamp 1=seq 2=site 3=rack
+         *   4=sensor_code 5=sensor_label 6=sensor_kind
+         *   7=value 8=unit 9=status ... 14=message */
+        char buf[512];
+        strncpy(buf, linha, sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = '\0';
+
+        char *tok[16];
+        int ntok = 0;
+        char *p = strtok(buf, ";");
+        while (p != NULL && ntok < 16) {
+            tok[ntok++] = p;
+            p = strtok(NULL, ";");
+        }
+
+        if (ntok >= 10) {
+            printf("  %-14s %-22s %8s %-7s %-10s %s\n",
+                   tok[4], tok[6], tok[7], tok[8], tok[9],
+                   ntok >= 15 ? tok[14] : "");
+        }
+    }
+
+    fclose(f);
+    remove(FICH_API_TMP);
+    printf("\n");
+    pausar();
+}
+
 /*
  * Menu
  */
@@ -391,11 +591,13 @@ void menuSensores(Sistema *s)
         printf("  ║  4. Listar sensores anomalos         ║\n");
         printf("  ║  5. Guardar sensores (binario)       ║\n");
         printf("  ║  6. Carregar sensores (binario)      ║\n");
+        printf("  ║  7. Importar da API (RACK-01)        ║\n");
+        printf("  ║  8. Consultar estado atual (API)     ║\n");
         printf("  ║  0. Voltar                           ║\n");
         printf("  ╚══════════════════════════════════════╝\n");
         printf("  Sensores registados: %d\n", s->totalSensores);
 
-        opcao = lerInteiro("  Opcao", 0, 6);
+        opcao = lerInteiro("  Opcao", 0, 8);
 
         switch (opcao)
         {
@@ -405,6 +607,8 @@ void menuSensores(Sistema *s)
         case 4: listarSensoresAnomalos(s);   break;
         case 5: guardarSensoresFicheiro(s);  pausar(); break;
         case 6: carregarSensoresFicheiro(s); pausar(); break;
+        case 7: importarSensoresAPI(s);      break;
+        case 8: consultarEstadoAPI();        break;
         case 0: break;
         }
     } while (opcao != 0);

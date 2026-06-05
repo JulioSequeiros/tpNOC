@@ -303,7 +303,7 @@ void imprimirCabecalho(void);
 void menuEstatistica(const Sistema *s);
 void menuEquipamento(Sistema *s);
 void guardarEquipamento(const Sistema *s);
-void carregarEquipameto(Sistema *s);
+void carregarEquipamento(Sistema *s);
 void guardarInventario(Sistema *s);   // alias
 
 /* ================= MODULO 2 - CONECTIVIDADE ================= */

@@ -14,22 +14,22 @@ void menuPrincipal(Sistema *s)
     {
         limparEcra();
         printf("\n");
-        printf("\n  ╔══════════════════════════════════════════════════════════════════╗\n");
-        printf("  ║   NOC - Network Operations Center                                ║\n");
-        printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
-        printf("  ║  1. Inventario de Equipamentos  [M1]                             ║\n");
-        printf("  ║  2. Conectividade               [M2]                             ║\n");
-        printf("  ║  3. Sensores                    [M3]                             ║\n");
-        printf("  ║  4. Incidentes                  [M4]                             ║\n");
-        printf("  ║  5. Configuracoes               [M5]                             ║\n");
-        printf("  ║  6. Relatorios                  [M6]                             ║\n");
-        printf("  ║  7. Perfil / Conta                                               ║\n");
-        printf("  ║  0. Sair                                                         ║\n");
-        printf("  ╠══════════════════════════════════════════════════════════════════╣\n");
-        printf("  ║  Equip: %-4d  Incidentes: %-4d  Config: %-4d  Tecnico: %-16s║\n",
+        printf("\n  ╔═══════════════════════════════════════════════════════════════════════╗\n");
+        printf("  ║   NOC - Network Operations Center                                     ║\n");
+        printf("  ╠═══════════════════════════════════════════════════════════════════════╣\n");
+        printf("  ║  1. Inventario de Equipamentos  [M1]                                  ║\n");
+        printf("  ║  2. Conectividade               [M2]                                  ║\n");
+        printf("  ║  3. Sensores                    [M3]                                  ║\n");
+        printf("  ║  4. Incidentes                  [M4]                                  ║\n");
+        printf("  ║  5. Configuracoes               [M5]                                  ║\n");
+        printf("  ║  6. Relatorios                  [M6]                                  ║\n");
+        printf("  ║  7. Perfil / Conta                                                    ║\n");
+        printf("  ║  0. Sair                                                              ║\n");
+        printf("  ╠═══════════════════════════════════════════════════════════════════════╣\n");
+        printf("  ║  Equip: %-4d  Incidentes: %-4d  Config: %-4d  Tecnico: %-16s       ║\n",
                     s->totalEquipamentos, s->totalIncidentes,
                     s->totalConfiguracoes, s->tecnicoLogado);
-        printf("  ╚══════════════════════════════════════════════════════════════════╝\n");
+        printf("  ╚═══════════════════════════════════════════════════════════════════════╝\n");
         opcao = lerInteiro("  Opcao", 0, 7);
         switch (opcao)
         {
@@ -67,15 +67,18 @@ int main(void)
     // Inicializar fila de atendimento (Módulo 4)
     inicializarFilaAtendimento(&s);
 
-    // Autenticação — bloqueia ate login valido
+    // Autenticação — bloqueia até ‘login’ valido
     inicializarTecnicos();
     if (!autenticarTecnico(&s)) return 1;
 
     // Req 1 — carregar dados existentes dos ficheiros binários
     printf("\n  A carregar dados...\n");
-    carregarEquipameto(&s);
+    carregarEquipamento(&s);
     carregarSensoresFicheiro(&s);
     carregarConfiguracoesFicheiro(&s);
+
+    _sleep(10);
+    limparEcra();
 
     menuPrincipal(&s);
 
@@ -116,8 +119,8 @@ int main(void)
     }
 
     // Libertar memoria — fila de atendimento
-    // A fila contém ponteiros para os incidentes, mas nao deve liberta-los novamente
-    // porque ja foram libertados acima. Apenas garantir que os ponteiros estao NULL
+    // A fila contém ponteiros para os incidentes, mas não deve libertá-los novamente
+    // porque já foram libertados acima. Apenas garantir que os ponteiros estao NULL
     s.filaAtendimento.inicio = NULL;
     s.filaAtendimento.fim = NULL;
     s.filaAtendimento.total = 0;

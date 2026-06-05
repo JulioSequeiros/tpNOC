@@ -315,7 +315,7 @@ void removerEquipamento(Sistema *s)
 
     /*
      * Realiza um check automatico na lista ligada se tem algum equipamento alocado,
-     * se nao tiver devolve uma mensagem.
+     * se não tiver devolve uma mensagem.
      */
 
     if (s->equipamentos == NULL)
@@ -395,7 +395,7 @@ void alterarEquipamento(Sistema *s)
 
     /*
      * Procura na lista ligada, se esse codigo do equipamento e existente,
-     * se nao for e devolvido um aviso a dizer que o equipamento nao existe.
+     * se não for e devolvido um aviso a dizer que o equipamento não existe.
      */
     NodeEquipamento *no = encontrarPorCodigo(s, codigo);
     if (no == NULL)
@@ -405,7 +405,7 @@ void alterarEquipamento(Sistema *s)
     }
 
     /*
-     * Se o equipamento existier vai para este passo, onde vai apresentar o equipamento que vai ser atualizado;
+     * Se o equipamento existir vai para este passo, onde vai apresentar o equipamento que vai ser atualizado.
      * Depois pergunta ao utilizador quais os dados que quer alterar, e depois atualiza os dados do equipamento.
      */
     Equipamento *e = &no->dados;
@@ -492,7 +492,7 @@ void alterarEstado(Sistema *s)
 
     /*
      * Procura na lista ligada, se esse codigo do equipamento e existente,
-     * se nao for e devolvido um aviso a dizer que o equipamento nao existe.
+     * se não for e devolvido um aviso a dizer que o equipamento não existe.
      */
     NodeEquipamento *no = encontrarPorCodigo(s, codigo);
     if (no == NULL)
@@ -699,7 +699,7 @@ void guardarEquipamento(const Sistema *s)
     printf("\n [OK] Equipamentos guardado com sucesso em \"%s\".\n",FICH_EQUIPAMENTOS);
 }
 
-void carregarEquipameto(Sistema *s)
+void carregarEquipamento(Sistema *s)
 {
     FILE *f = fopen(FICH_EQUIPAMENTOS, "rb");
     if (f == NULL)
@@ -792,7 +792,7 @@ void menuEquipamento(Sistema *s)
         printf("  ║  0. Voltar                           ║\n");
         printf("  ╚══════════════════════════════════════╝\n");
 
-        opcao = lerInteiro("  Opção: ", 0, 9);
+        opcao = lerInteiro("  Opção ", 0, 9);
 
         switch (opcao)
         {

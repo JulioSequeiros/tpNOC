@@ -136,6 +136,7 @@ int autenticarTecnico(Sistema *s)
                 limparEcra();
                 printf("\n  Bem-vindo, %s!\n", s->tecnicoLogado);
                 pausar();
+                limparEcra();
                 return 1;
             }
         }

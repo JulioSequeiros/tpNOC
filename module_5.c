@@ -92,7 +92,7 @@ void registarConfiguracao(Sistema *s)
 
     limparEcra();
     printf("\n  ╔══════════════════════════════════════════════════╗\n");
-    printf("  ║   Registar Configuracao                          ║\n");
+    printf("  ║   Registar Configuracao de Equipamento           ║\n");
     printf("  ╚══════════════════════════════════════════════════╝\n\n");
 
     int cod = lerInteiro("  Codigo do equipamento", 1, s->proximoCodigoEquip - 1);
@@ -103,26 +103,50 @@ void registarConfiguracao(Sistema *s)
         pausar();
         return;
     }
-    printf("  Equipamento: %s\n\n", eq->dados.nome);
+
+    printf("\n  Equipamento : %s\n", eq->dados.nome);
+    printf("  Tipo        : %s\n", tipoToString(eq->dados.tipo));
+    printf("  IP          : %s\n\n", eq->dados.ip);
 
     Configuracao cfg;
     memset(&cfg, 0, sizeof(Configuracao));
     cfg.codigoEquipamento = cod;
 
-    lerString("  Tipo de configuracao (e.g., IP, NOME, LOCALIZACAO, MAC)",
-        cfg.tipoConfiguracao, MAX_TIPO_CONFIG);
-    lerString("  Valor anterior", cfg.valorAnterior, MAX_VALOR);
-    lerString("  Novo valor", cfg.novoValor, MAX_VALOR);
+    printf("  Tipos de configuracao comuns: INTERFACE, ROUTING, VLAN, ACL, SENHA, SNMP, QOS, OUTRO\n");
+    lerString("  Tipo de configuracao", cfg.tipoConfiguracao, MAX_TIPO_CONFIG);
+
+    /* Preencher valorAnterior automaticamente a partir da ultima config deste equipamento na pilha */
+    const NodeConfiguracao *atual = s->pilhaConfiguracoes.topo;
+    while (atual != NULL && atual->dados.codigoEquipamento != cod)
+        atual = atual->proximo;
+
+    printf("\n  --- Configuracao anterior (automatica) ---\n");
+    if (atual != NULL)
+    {
+        strncpy(cfg.valorAnterior, atual->dados.novoValor, MAX_VALOR - 1);
+        cfg.valorAnterior[MAX_VALOR - 1] = '\0';
+        printf("  %s\n", cfg.valorAnterior);
+    }
+    else
+    {
+        strncpy(cfg.valorAnterior, "(sem configuracao anterior registada)", MAX_VALOR - 1);
+        printf("  (sem configuracao anterior registada para este equipamento)\n");
+    }
+
+    printf("\n  Nova configuracao aplicada ao equipamento\n");
+    printf("  (ex: 'interface fa0/1 / no shutdown / ip address 10.0.0.1 255.255.255.0')\n");
+    lerString("  Nova configuracao", cfg.novoValor, MAX_VALOR);
+
     strncpy(cfg.tecnico, s->tecnicoLogado, MAX_TECNICO - 1);
     cfg.tecnico[MAX_TECNICO - 1] = '\0';
-    printf("  Tecnico: %s\n", cfg.tecnico);
+    printf("\n  Tecnico: %s\n", cfg.tecnico);
     obterDataHoraAtual(cfg.dataHora);
 
     empilhar(&s->pilhaConfiguracoes, cfg);
     s->totalConfiguracoes = s->pilhaConfiguracoes.tamanho;
     s->proximoCodigoCfg++;
 
-    printf("  [OK] Configuracao registada. Pilha: %d entrada(s).\n",
+    printf("\n  [OK] Configuracao registada. Pilha: %d entrada(s).\n",
            s->pilhaConfiguracoes.tamanho);
     pausar();
 }
@@ -208,26 +232,23 @@ void reverterUltimaConfiguracao(Sistema *s)
     NodeConfiguracao *no = desempilhar(&s->pilhaConfiguracoes);
     s->totalConfiguracoes = s->pilhaConfiguracoes.tamanho;
 
-    NodeEquipamento *eq = encontrarPorCodigo(s, no->dados.codigoEquipamento);
-    if (eq != NULL)
-    {
-        if (aplicarReversao(eq, &no->dados))
-            printf("  [OK] Campo '%s' do equipamento #%d restaurado para \"%s\".\n",
-                   no->dados.tipoConfiguracao,
-                   no->dados.codigoEquipamento,
-                   no->dados.valorAnterior);
-        else
-            printf("  [--] Tipo '%s' nao mapeado automaticamente.\n"
-                   "       Restaure o valor \"%s\" manualmente.\n",
-                   no->dados.tipoConfiguracao, no->dados.valorAnterior);
-    } else
-    {
-        printf("  [!] Equipamento #%d nao esta na lista atual.\n",
-               no->dados.codigoEquipamento);
-    }
+    printf("\n  ╔══════════════════════════════════════════════════╗\n");
+    printf("  ║   CONFIGURACAO A REVERTER                        ║\n");
+    printf("  ╚══════════════════════════════════════════════════╝\n");
+    printf("  Equipamento #%d | Tipo: %s | Tecnico: %s\n",
+           no->dados.codigoEquipamento,
+           no->dados.tipoConfiguracao,
+           no->dados.tecnico);
+    printf("\n  Configuracao que foi aplicada:\n");
+    printf("  %s\n", no->dados.novoValor);
+    printf("\n  Configuracao a restaurar no equipamento:\n");
+    printf("  ┌─────────────────────────────────────────────────┐\n");
+    printf("  │ %s\n", no->dados.valorAnterior);
+    printf("  └─────────────────────────────────────────────────┘\n");
+    printf("\n  [!] Aplique os comandos acima no equipamento para concluir a reversao.\n");
 
     free(no);
-    printf("  [OK] Configuracao removida da pilha. Pilha: %d entrada(s).\n",
+    printf("\n  [OK] Configuracao removida da pilha. Pilha: %d entrada(s).\n",
            s->pilhaConfiguracoes.tamanho);
     pausar();
 }

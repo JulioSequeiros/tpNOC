@@ -74,7 +74,7 @@ int main(void)
     // Req 1 — carregar dados existentes dos ficheiros binários (M6)
     carregarTodosDados(&s);
 
-    _sleep(10);
+    _sleep(20);
     limparEcra();
 
     menuPrincipal(&s);

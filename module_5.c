@@ -170,7 +170,7 @@ void consultarNConfiguracoes(const Sistema *s)
     int n = lerInteiro("  Quantas configurações mostrar", 1, total);
 
     const NodeConfiguracao *atual = s->pilhaConfiguracoes.topo;
-    for (int i = 0; atual != NULL && i <= n; i++, atual = atual->proximo)
+    for (int i = 1; atual != NULL && i <= n; i++, atual = atual->proximo)
         imprimirConfiguracaoDetalhe(&atual->dados, i);
 
     pausar();

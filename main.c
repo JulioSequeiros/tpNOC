@@ -71,13 +71,10 @@ int main(void)
     inicializarTecnicos();
     if (!autenticarTecnico(&s)) return 1;
 
-    // Req 1 — carregar dados existentes dos ficheiros binários
-    printf("\n  A carregar dados...\n");
-    carregarEquipamento(&s);
-    carregarSensoresFicheiro(&s);
-    carregarConfiguracoesFicheiro(&s);
+    // Req 1 — carregar dados existentes dos ficheiros binários (M6)
+    carregarTodosDados(&s);
 
-    _sleep(10);
+    _sleep(20);
     limparEcra();
 
     menuPrincipal(&s);
@@ -88,10 +85,8 @@ int main(void)
     char lixo;
     if (scanf("%d%c", &opcaoGuardar, &lixo) == 2 && opcaoGuardar == 1)
     {
-        guardarEquipamento(&s);
-        guardarSensoresFicheiro(&s);
-        guardarConfiguracoesFicheiro(&s);
-        printf("  [OK] Dados guardados.\n");
+        // Req 14 — guardar todos os dados (M6)
+        guardarTodosDados(&s);
     }
 
     // Libertar memoria — equipamentos

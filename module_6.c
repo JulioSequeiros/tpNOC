@@ -194,7 +194,7 @@ static void guardarEquipamentosBin(const Sistema *s)
 }
 
 // Carregar incidentes de ficheiro binario
-static void carregarIncidentesBin(Sistema *s)
+void carregarIncidentes(Sistema *s)
 {
     FILE *f = fopen("incidentes.dat", "rb");
     if (f == NULL)
@@ -245,7 +245,7 @@ static void carregarIncidentesBin(Sistema *s)
 }
 
 // Guardar incidentes em ficheiro binario
-static void guardarIncidentesBin(const Sistema *s)
+void guardarIncidentes(Sistema *s)
 {
     FILE *f = fopen("incidentes.dat", "wb");
     if (f == NULL)
@@ -275,7 +275,9 @@ static void guardarIncidentesBin(const Sistema *s)
 void carregarTodosDados(Sistema *s)
 {
     carregarEquipamentosBin(s);
-    carregarIncidentesBin(s);
+    carregarIncidentes(s);
+    carregarSensoresFicheiro(s);
+    carregarConfiguracoesFicheiro(s);
     printf("\n  Dados carregados com sucesso!\n");
 }
 
@@ -283,7 +285,9 @@ void carregarTodosDados(Sistema *s)
 void guardarTodosDados(Sistema *s)
 {
     guardarEquipamentosBin(s);
-    guardarIncidentesBin(s);
+    guardarIncidentes(s);
+    guardarSensoresFicheiro(s);
+    guardarConfiguracoesFicheiro(s);
     printf("\n  Dados guardados com sucesso!\n");
 }
 

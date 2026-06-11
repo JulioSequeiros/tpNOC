@@ -22,7 +22,7 @@
 #define MAX_DESC        200
 #define MAX_TECNICO     50
 #define MAX_TIPO_CONFIG 50
-#define MAX_VALOR       100
+#define MAX_VALOR       500
 #define MAX_COD_SENSOR  30
 #define MAX_UNIDADE     10
 

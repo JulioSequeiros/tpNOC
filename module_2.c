@@ -294,7 +294,7 @@ static void listarEquipamentosResumido(const Sistema *s)
 }
 
 /*
- * Operacoes Logicas do Modulo 2
+ * Operacoes Logicas do Módulo 2
  */
 
 // 1. Selecionar um equipamento registado e executar um teste ping ao seu endereco IP
@@ -314,7 +314,7 @@ void executarPingEquipamento(Sistema *s)
         return;
     }
     
-    // Lista equipamentos disponiveis
+    // Lista equipamentos disponiveis - PERCORRER LISTA
     printf("\n  Equipamentos disponiveis:\n");
     listarEquipamentosResumido(s);
     
@@ -322,7 +322,7 @@ void executarPingEquipamento(Sistema *s)
     int codigo = lerInteiro("\n  Insira o codigo do equipamento para testar", 
                             1, s->proximoCodigoEquip - 1);
     
-    // Procura o equipamento
+    // Procura o equipamento - FUNÇÃO PROCURAR
     NodeEquipamento *equipamento = encontrarPorCodigo(s, codigo);
     if (equipamento == NULL)
     {
@@ -369,7 +369,7 @@ void executarPingEquipamento(Sistema *s)
     // Atualizar data da ultima verificacao
     obterDataAtual(equipamento->dados.dataUltimaVerificacao);
     
-    // Se nao respondeu, alterar estado para EM_FALHA
+    // Se não respondeu, alterar estado para EM_FALHA
     if (!stats.respondeu)
     {
         equipamento->dados.estado = EM_FALHA;

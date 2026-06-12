@@ -14,3 +14,21 @@ add_executable(tpNOC
         module_auth.c
         util.c
 )
+
+# --- Testes com Unity ---
+enable_testing()
+
+add_executable(testes
+        tests/test_exemplo.c
+        tests/unity/unity.c
+        module_1.c
+        module_2.c
+        module_3.c
+        module_4.c
+        module_5.c
+        module_6.c
+        module_auth.c
+        util.c
+)
+
+add_test(NAME testes COMMAND testes)

@@ -8,7 +8,7 @@
  * UTIL - Funções auxiliares específicas do módulo 6
  */
 
-// Função auxiliar para obter string do estado do equipamento para relatórios
+// Função auxiliar para obter 'string' do estado do equipamento para relatórios
 static const char *estadoEquipamentoParaRelatorio(EstadoEquipamento estado)
 {
     switch (estado)
@@ -21,7 +21,7 @@ static const char *estadoEquipamentoParaRelatorio(EstadoEquipamento estado)
     }
 }
 
-// Função auxiliar para obter string da prioridade para relatórios
+// Função auxiliar para obter 'string' da prioridade para relatórios
 static const char *prioridadeParaRelatorio(int prioridade)
 {
     switch (prioridade)
@@ -245,7 +245,7 @@ void carregarIncidentes(Sistema *s)
 }
 
 // Guardar incidentes em ficheiro binario
-void guardarIncidentes(Sistema *s)
+void guardarIncidentes(const Sistema *s)
 {
     FILE *f = fopen("incidentes.dat", "wb");
     if (f == NULL)
@@ -268,7 +268,7 @@ void guardarIncidentes(Sistema *s)
 }
 
 /*
- * Operacoes Logicas do Modulo 6
+ * Operacoes Logicas do Módulo 6
  */
 
 // 1. Carregar dados existentes ao iniciar a aplicacao
@@ -282,7 +282,7 @@ void carregarTodosDados(Sistema *s)
 }
 
 // 2. Guardar dados atualizados antes de sair da aplicacao
-void guardarTodosDados(Sistema *s)
+void guardarTodosDados(const Sistema *s)
 {
     guardarEquipamentosBin(s);
     guardarIncidentes(s);
@@ -340,7 +340,7 @@ void importarLeiturasSensores(Sistema *s)
                codigo, tipo, valor, unidade, estado);
         totalLeituras++;
         
-        // Registar no log de sensores
+        // Registar no 'log' de sensores
         FILE *log = fopen("log_sensores.txt", "a");
         if (log != NULL)
         {
@@ -400,7 +400,7 @@ void importarLeiturasSensores(Sistema *s)
 }
 
 // 4. Guardar os resultados dos comandos de rede em ficheiros de texto
-void guardarResultadosRede(Sistema *s)
+void guardarResultadosRede(const Sistema *s)
 {
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -434,7 +434,7 @@ void guardarResultadosRede(Sistema *s)
 }
 
 // 5. Gerar um relatorio de estado da rede
-void gerarRelatorioEstadoRede(Sistema *s)
+void gerarRelatorioEstadoRede(const Sistema *s)
 {
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -580,7 +580,7 @@ void gerarRelatorioEstadoRede(Sistema *s)
 }
 
 // 6. Gerar um relatorio mensal de incidentes
-void gerarRelatorioMensalIncidentes(Sistema *s)
+void gerarRelatorioMensalIncidentes(const Sistema *s)
 {
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -670,7 +670,7 @@ void gerarRelatorioMensalIncidentes(Sistema *s)
 }
 
 // 7. Listar equipamentos ordenados
-void listarEquipamentosOrdenados(Sistema *s)
+void listarEquipamentosOrdenados(const Sistema *s)
 {
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -864,7 +864,7 @@ void listarEquipamentosOrdenados(Sistema *s)
 }
 
 // 9. Criar resumo textual do estado da rede (Normal, Aviso, Critico) - NOVA FUNCAO
-void resumoTextualEstadoRede(Sistema *s)
+void resumoTextualEstadoRede(const Sistema *s)
 {
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -978,7 +978,7 @@ void resumoTextualEstadoRede(Sistema *s)
     printf("  [ANALISE DETALHADA]\n");
     printf("  ---------------------------------------------------------------------\n");
     
-    // Analise da percentagem de equipamentos operacionais
+    // Análise da percentagem de equipamentos operacionais
     if (percentagemOperacional >= 95)
     {
         printf("  - Excelente: %.1f%% dos equipamentos estao operacionais.\n", percentagemOperacional);
@@ -996,7 +996,7 @@ void resumoTextualEstadoRede(Sistema *s)
         printf("  - Critico: Apenas %.1f%% dos equipamentos estao operacionais.\n", percentagemOperacional);
     }
     
-    // Analise dos equipamentos em falha
+    // Análise dos equipamentos em falha
     if (emFalha > 0)
     {
         printf("  - %d equipamento(s) em estado de FALHA.\n", emFalha);
@@ -1010,7 +1010,7 @@ void resumoTextualEstadoRede(Sistema *s)
         printf("  - Nenhum equipamento em estado de falha.\n");
     }
     
-    // Analise dos incidentes pendentes
+    // Análise dos incidentes pendentes
     if (incidentesPendentes > 0)
     {
         printf("  - %d incidente(s) pendentes.\n", incidentesPendentes);
@@ -1032,7 +1032,7 @@ void resumoTextualEstadoRede(Sistema *s)
     printf("  %s\n", recomendacao);
     printf("  ---------------------------------------------------------------------\n\n");
     
-    // Sugestoes especificas
+    // Sugestões especificas
     printf("  [SUGESTOES]\n");
     printf("  ---------------------------------------------------------------------\n");
     
@@ -1225,7 +1225,7 @@ void outrasAtividadesRelatorios(Sistema *s)
 }
 
 /*
- * Funcoes de Interface com o Modulo Principal
+ * Funcoes de ‘Interface’ com o Módulo Principal
  */
 
 void carregarFicheiro(Sistema *s)
@@ -1239,7 +1239,7 @@ void guardarFicheiro(const Sistema *s)
 }
 
 /*
- * Menu do Modulo 6
+ * Menu do Módulo 6
  */
 
 void menuRelatorios(Sistema *s)
@@ -1248,6 +1248,7 @@ void menuRelatorios(Sistema *s)
     
     do
     {
+        _sleep(40);
         limparEcra();
         printf("\n  ================================================================\n");
         printf("  |           MODULO 6 - RELATORIOS E FICHEIROS                |\n");

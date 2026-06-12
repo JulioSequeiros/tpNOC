@@ -417,6 +417,7 @@ void menuConfiguracoes(Sistema *s)
 {
     int opcao;
     do {
+        _sleep(20);
         limparEcra();
         printf("\n  ╔══════════════════════════════════════════════════╗\n");
         printf("  ║   M5 — Registo de Configuracoes                  ║\n");

@@ -1,7 +1,6 @@
 // Modulo 2: Testes de Conectividade
 // Created by Guilherme Fernandes on 24/05/26.
 //
-
 #include "noc.h"
 
 #ifdef _WIN32
@@ -14,7 +13,7 @@
  * UTIL - Funções auxiliares específicas do módulo 2
  */
 
-// Estrutura interna para resultados de teste (não vai para o .h)
+// Estrutura interna para resultados de teste (não vai para o ".h")
 typedef struct ResultadoTeste {
     int codigo;
     char nome[MAX_NOME];
@@ -93,27 +92,27 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
 {
     FILE *f = fopen(ficheiro, "r");
     PingEstatisticas stats;
-    
+
     // Inicializar estatisticas
     stats.respondeu = 0;
     stats.pacotesEnviados = 4;
     stats.pacotesRecebidos = 0;
     stats.pacotesPerdidos = 4;
-    stats.percentagemPerda = 100.0;
+    stats.percentagemPerda = 100.0f;
     stats.tempoMinimo = 0;
     stats.tempoMaximo = 0;
     stats.tempoMedio = 0;
-    
+
     if (f == NULL) return stats;
-    
+
     char linha[300];
     int tempos[4];
     int numTempos = 0;
-    
+
     while (fgets(linha, sizeof(linha), f) != NULL)
     {
         // Verificar se houve resposta
-        if (strstr(linha, "TTL=") != NULL || 
+        if (strstr(linha, "TTL=") != NULL ||
             strstr(linha, "ttl=") != NULL ||
             strstr(linha, "Reply from") != NULL ||
             strstr(linha, "Resposta de") != NULL ||
@@ -121,10 +120,10 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
         {
             stats.respondeu = 1;
             stats.pacotesRecebidos++;
-            
+
             // Extrair tempo de resposta (Windows e Linux)
             int tempo = 0;
-            
+
             // Formato Windows: "tempo=10ms" ou "time=10ms"
             if (strstr(linha, "tempo=") != NULL)
             {
@@ -139,13 +138,13 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
             {
                 sscanf(strstr(linha, "time="), "time=%d ms", &tempo);
             }
-            
+
             if (tempo > 0 && numTempos < 4)
             {
                 tempos[numTempos++] = tempo;
             }
         }
-        
+
         // Extrair estatisticas finais (Windows)
         if (strstr(linha, "Perda =") != NULL)
         {
@@ -163,7 +162,7 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
             stats.pacotesPerdidos = (int)(4 * perdidos / 100.0);
             stats.pacotesRecebidos = 4 - stats.pacotesPerdidos;
         }
-        
+
         // Extrair estatisticas finais (Linux)
         if (strstr(linha, "received") != NULL)
         {
@@ -174,19 +173,19 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
             stats.pacotesPerdidos = stats.pacotesEnviados - recebidos;
             stats.percentagemPerda = perdidos;
         }
-        
+
         // Extrair tempos minimo, maximo e medio (Windows)
         if (strstr(linha, "Minimo =") != NULL || strstr(linha, "Minimum =") != NULL)
         {
             int min, max, media;
             if (strstr(linha, "Minimo =") != NULL)
             {
-                sscanf(linha, "Minimo = %dms, Maximo = %dms, Media = %dms", 
+                sscanf(linha, "Minimo = %dms, Maximo = %dms, Media = %dms",
                        &min, &max, &media);
             }
             else
             {
-                sscanf(linha, "Minimum = %dms, Maximum = %dms, Average = %dms", 
+                sscanf(linha, "Minimum = %dms, Maximum = %dms, Average = %dms",
                        &min, &max, &media);
             }
             stats.tempoMinimo = min;
@@ -194,14 +193,14 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
             stats.tempoMedio = media;
         }
     }
-    
-    // Se nao encontrou as estatisticas finais, calcular a partir dos tempos
+
+    // Se não encontrou as estatisticas finais, calcular a partir dos tempos
     if (stats.tempoMedio == 0 && numTempos > 0)
     {
         int soma = 0;
         stats.tempoMinimo = tempos[0];
         stats.tempoMaximo = tempos[0];
-        
+
         for (int i = 0; i < numTempos; i++)
         {
             soma += tempos[i];
@@ -210,7 +209,7 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
         }
         stats.tempoMedio = (float)soma / numTempos;
     }
-    
+
     fclose(f);
     return stats;
 }
@@ -218,7 +217,7 @@ static PingEstatisticas extrairEstatisticasPing(const char *ficheiro)
 // Função auxiliar para mostrar estatisticas do ping
 static void mostrarEstatisticasPing(const PingEstatisticas *stats)
 {
-    printf("\n  --- ESTATISTICAS DO PING ---\n");
+    printf("\n  --- ESTATÍSTICAS DO PING ---\n");
     printf("  Pacotes enviados:   %d\n", stats->pacotesEnviados);
     printf("  Pacotes recebidos:  %d\n", stats->pacotesRecebidos);
     printf("  Pacotes perdidos:   %d\n", stats->pacotesPerdidos);
@@ -255,7 +254,7 @@ static void mostrarEstatisticasPing(const PingEstatisticas *stats)
     }
 }
 
-// Função auxiliar para registar no log de monitorizacao
+// Função auxiliar para registar no "log" de monitorizacao
 static void registarLog(const char *mensagem)
 {
     FILE *log = fopen("log_monitorizacao.txt", "a");
@@ -400,7 +399,7 @@ void executarPingEquipamento(Sistema *s)
         }
     }
     
-    // Registar no log
+    // Registar no "log"
     char logMsg[300];
     snprintf(logMsg, sizeof(logMsg), "Ping para %s (%s) - Perda: %.1f%% - Tempo medio: %.1fms",
              equipamento->dados.nome, equipamento->dados.ip,
@@ -415,9 +414,9 @@ void executarPingEquipamento(Sistema *s)
 }
 
 // 2. Guardar o resultado bruto do comando num ficheiro de texto
-void guardarResultadoPing(Sistema *s)
+void guardarResultadoPing(const Sistema *s)
 {
-    (void)s;  // Parametro nao utilizado
+    (void)s;  // Parametro não utilizado
     
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -470,7 +469,7 @@ void guardarResultadoPing(Sistema *s)
     printf("\n  [OK] Resultado do ping guardado com sucesso!\n");
     printf("  [OK] Ficheiro: %s\n", nomeFicheiro);
     
-    // Registar no log
+    // Registar no "log"
     char logMsg[200];
     snprintf(logMsg, sizeof(logMsg), "Resultado do ping guardado em: %s", nomeFicheiro);
     registarLog(logMsg);
@@ -479,9 +478,9 @@ void guardarResultadoPing(Sistema *s)
 }
 
 // 3. Ler o ficheiro de resultado e determinar se o equipamento respondeu (com estatisticas)
-void verificarRespostaPing(Sistema *s)
+void verificarRespostaPing(const Sistema *s)
 {
-    (void)s;  // Parametro nao utilizado
+    (void)s;  // Parametro não utilizado
     
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -518,7 +517,7 @@ void verificarRespostaPing(Sistema *s)
     // Mostrar estatisticas
     mostrarEstatisticasPing(&stats);
     
-    // Registar no log
+    // Registar no "log"
     char logMsg[200];
     snprintf(logMsg, sizeof(logMsg), "Verificacao de ping: %s - Perda: %.1f%% - Tempo medio: %.1fms",
              stats.respondeu ? "ONLINE" : "OFFLINE",
@@ -528,7 +527,7 @@ void verificarRespostaPing(Sistema *s)
     pausar();
 }
 
-// 4. Atualizar automaticamente a data da ultima verificacao do equipamento
+// 4. Atualizar automaticamente a data da última verificacao do equipamento
 void atualizarDataVerificacao(Sistema *s)
 {
     limparEcra();
@@ -576,7 +575,7 @@ void atualizarDataVerificacao(Sistema *s)
         printf("\n  [OK] Data atualizada com sucesso!\n");
         printf("  [OK] Nova data: %s\n", encontrado->dados.dataUltimaVerificacao);
         
-        // Registar no log
+        // Registar no "log"
         char logMsg[200];
         snprintf(logMsg, sizeof(logMsg), "Data de verificacao atualizada para equipamento %d (%s)",
                  encontrado->dados.codigo, encontrado->dados.nome);
@@ -593,7 +592,7 @@ void atualizarDataVerificacao(Sistema *s)
     pausar();
 }
 
-// 5. Alterar o estado do equipamento para EM_FALHA quando nao existir resposta
+// 5. Alterar o estado do equipamento para EM_FALHA quando não existir resposta
 void alterarEstadoFalha(Sistema *s)
 {
     limparEcra();
@@ -647,7 +646,7 @@ void alterarEstadoFalha(Sistema *s)
         
         printf("\n  [OK] Estado alterado para EM_FALHA com sucesso!\n");
         
-        // Registar no log
+        // Registar no "log"
         char logMsg[200];
         snprintf(logMsg, sizeof(logMsg), "Estado do equipamento %d (%s) alterado para EM_FALHA",
                  encontrado->dados.codigo, encontrado->dados.nome);
@@ -665,9 +664,9 @@ void alterarEstadoFalha(Sistema *s)
 }
 
 // 6. Registar cada teste realizado num ficheiro de texto denominado log_monitorizacao.txt
-void registarTesteLog(Sistema *s)
+void registarTesteLog(const Sistema *s)
 {
-    (void)s;  // Parametro nao utilizado
+    (void)s;  // Parametro não utilizado
     
     limparEcra();
     printf("\n  =====================================================================\n");
@@ -694,7 +693,7 @@ void registarTesteLog(Sistema *s)
     char dataHora[50];
     strftime(dataHora, sizeof(dataHora), "%d/%m/%Y %H:%M:%S", tm_info);
     
-    // Registar no log
+    // Registar no "log"
     char logMsg[300];
     snprintf(logMsg, sizeof(logMsg), "Teste de ping executado - Resultado: %s - Perda: %.1f%% - Tempo medio: %.1fms",
              stats.respondeu ? "RESPONDEU" : "NAO RESPONDEU",
@@ -716,7 +715,7 @@ void registarTesteLog(Sistema *s)
     pausar();
 }
 
-// 7. Criar automaticamente um incidente tecnico quando um equipamento nao responde
+// 7. Criar automaticamente um incidente tecnico quando um equipamento não responde
 void criarIncidenteAutomatico(Sistema *s)
 {
     limparEcra();
@@ -822,7 +821,7 @@ void criarIncidenteAutomatico(Sistema *s)
     printf("  Perda de pacotes: %.1f%%\n", stats.percentagemPerda);
     printf("  ---------------------------------------------------------------------\n");
     
-    // Registar no log
+    // Registar no "log".
     char logMsg[300];
     snprintf(logMsg, sizeof(logMsg), "INCIDENTE AUTOMATICO #%d - Equipamento %d (%s) nao respondeu ao ping (Perda: %.1f%%)",
              novo->dados.codigo, codigo, equipEncontrado->dados.nome, stats.percentagemPerda);
@@ -964,7 +963,7 @@ void pingGeral(Sistema *s)
     }
     
     // Calcular perda media
-    float perdaMedia = (equipamentosComPerda > 0) ? (perdaTotal / equipamentosComPerda) : 0;
+    const float perdaMedia = (equipamentosComPerda > 0) ? (perdaTotal / (float)equipamentosComPerda) : 0.0f;
     
     // Relatorio final
     printf("\n  ---------------------------------------------------------------------\n");
@@ -1013,7 +1012,7 @@ void pingGeral(Sistema *s)
         }
     }
     
-    // Registar no log
+    // Registar no "log".
     char logMsg[300];
     snprintf(logMsg, sizeof(logMsg), "TESTE GERAL: %d equipamentos, %d online, %d offline, %d incidentes, Perda media: %.1f%%",
              s->totalEquipamentos, online, offline, incidentesCriados, perdaMedia);
@@ -1028,10 +1027,10 @@ void pingGeral(Sistema *s)
     pausar();
 }
 
-// 9. Outras atividades que considere relevantes (comandos de rede adicionais)
-void executarComandosRedeExtra(Sistema *s)
+// 9. Outras atividades que considere relevantes (comandos de rede adicionais);
+void executarComandosRedeExtra(const Sistema *s)
 {
-    (void)s;  // Parametro nao utilizado para evitar warning
+    (void)s;  // Parametro não utilizado para evitar warning
     
     int opcao;
     
@@ -1064,8 +1063,7 @@ void executarComandosRedeExtra(Sistema *s)
 }
 
 // Funcoes auxiliares para os comandos extra
-void obterInfoRedeLocal(void)
-{
+void obterInfoRedeLocal(void){
     limparEcra();
     printf("\n  =====================================================================\n");
     printf("  |              INFORMACAO DA REDE LOCAL                     |\n");
@@ -1073,18 +1071,17 @@ void obterInfoRedeLocal(void)
     
     printf("\n  A obter informacao da rede local...\n");
     
-#ifdef _WIN32
-    system("ipconfig > resultado_rede_local.txt");
-#else
-    system("ip addr > resultado_rede_local.txt");
-#endif
+    #ifdef _WIN32
+        system("ipconfig > resultado_rede_local.txt");
+    #else
+        system("ip addr > resultado_rede_local.txt");
+    #endif
     
     printf("\n  [OK] Informacao guardada em: resultado_rede_local.txt\n");
     registarLog("Informacao da rede local obtida");
 }
 
-void obterTabelaARP(void)
-{
+void obterTabelaARP(void){
     limparEcra();
     printf("\n  =====================================================================\n");
     printf("  |                    TABELA ARP                             |\n");
@@ -1097,8 +1094,7 @@ void obterTabelaARP(void)
     registarLog("Tabela ARP obtida");
 }
 
-void obterResolucaoDNS(void)
-{
+void obterResolucaoDNS(void){
     limparEcra();
     printf("\n  =====================================================================\n");
     printf("  |                  RESOLUCAO DNS                            |\n");
@@ -1109,13 +1105,13 @@ void obterResolucaoDNS(void)
     
     printf("\n  A resolver %s...\n", dominio);
     
-#ifdef _WIN32
-    char comando[200];
-    snprintf(comando, sizeof(comando), "nslookup %s > resultado_dns.txt", dominio);
-#else
-    char comando[200];
-    snprintf(comando, sizeof(comando), "nslookup %s > resultado_dns.txt", dominio);
-#endif
+    #ifdef _WIN32
+        char comando[200];
+        snprintf(comando, sizeof(comando), "nslookup %s > resultado_dns.txt", dominio);
+    #else
+        char comando[200];
+        snprintf(comando, sizeof(comando), "nslookup %s > resultado_dns.txt", dominio);
+    #endif
     
     system(comando);
     
@@ -1126,8 +1122,7 @@ void obterResolucaoDNS(void)
     registarLog(logMsg);
 }
 
-void obterRotaDestino(void)
-{
+void obterRotaDestino(void){
     limparEcra();
     printf("\n  =====================================================================\n");
     printf("  |              ROTA ATE DESTINO                             |\n");
@@ -1138,13 +1133,13 @@ void obterRotaDestino(void)
     
     printf("\n  A tracar rota ate %s...\n", destino);
     
-#ifdef _WIN32
-    char comando[200];
-    snprintf(comando, sizeof(comando), "tracert %s > resultado_rota.txt", destino);
-#else
-    char comando[200];
-    snprintf(comando, sizeof(comando), "traceroute %s > resultado_rota.txt", destino);
-#endif
+    #ifdef _WIN32
+        char comando[200];
+        snprintf(comando, sizeof(comando), "tracert %s > resultado_rota.txt", destino);
+    #else
+        char comando[200];
+        snprintf(comando, sizeof(comando), "traceroute %s > resultado_rota.txt", destino);
+    #endif
     
     system(comando);
     
@@ -1165,21 +1160,24 @@ void menuConectividade(Sistema *s)
     
     do
     {
+        _sleep(20);
         limparEcra();
-        printf("\n  ================================================================\n");
-        printf("  |              MODULO 2 - TESTES DE CONECTIVIDADE            |\n");
-        printf("  ================================================================\n");
-        printf("  |  1. Executar ping a um equipamento                         |\n");
-        printf("  |  2. Guardar resultado do ping em ficheiro                 |\n");
-        printf("  |  3. Verificar se equipamento respondeu ao ping            |\n");
-        printf("  |  4. Atualizar data da ultima verificacao                  |\n");
-        printf("  |  5. Alterar estado para EM_FALHA                          |\n");
-        printf("  |  6. Registar teste no log de monitorizacao                |\n");
-        printf("  |  7. Criar incidente automaticamente (falha no ping)       |\n");
-        printf("  |  8. Teste geral da rede (ping a todos)                    |\n");
-        printf("  |  9. Comandos de rede extra                                |\n");
-        printf("  |  0. Voltar                                                |\n");
-        printf("  ================================================================\n");
+        printf("\n  ╔════════════════════════════════════════════════════════════════╗\n");
+        printf("  ║              MODULO 2 - TESTES DE CONECTIVIDADE              ║\n");
+        printf("  ╠════════════════════════════════════════════════════════════════╣\n");
+        printf("  ║  1. Executar ping a um equipamento                            ║\n");
+        printf("  ║  2. Guardar resultado do ping em ficheiro                     ║\n");
+        printf("  ║  3. Verificar se equipamento respondeu ao ping                ║\n");
+        printf("  ║  4. Atualizar data da ultima verificacao                      ║\n");
+        printf("  ║  5. Alterar estado para EM_FALHA                              ║\n");
+        printf("  ║  6. Registar teste no log de monitorizacao                    ║\n");
+        printf("  ║  7. Criar incidente automaticamente (falha no ping)           ║\n");
+        printf("  ║  8. Teste geral da rede (ping a todos)                        ║\n");
+        printf("  ║  9. Comandos de rede extra                                    ║\n");
+        printf("  ║  0. Voltar                                                    ║\n");
+        printf("  ╚════════════════════════════════════════════════════════════════╝\n");
+
+        opcao = lerInteiro("  Opcao", 0, 9);
         
         opcao = lerInteiro("  Opcao", 0, 9);
         

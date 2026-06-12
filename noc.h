@@ -257,7 +257,7 @@ typedef struct Sistema {
     FilaAtendimento *filaAtendimentoPtr;
     FilaAtendimento *filaAtendimentoTras;
 
-    // Autenticação — técnico com sessão activa
+    // Autenticação — técnico com sessão ativa
     char tecnicoLogado[MAX_TECNICO];
 
 } Sistema;
@@ -294,7 +294,7 @@ void listarTodos(const Sistema *s);
 void listarPorTipo(const Sistema *s);
 void listarPorEstado(const Sistema *s);
 void pesquisarEquipamento(Sistema *s);
-void listarEquipamentos(Sistema *s);  // alias para listarTodos
+void listarEquipamentos(Sistema *s);  // aliás, para listarTodos
 NodeEquipamento *encontrarPorCodigo(Sistema *s, int codigo);
 NodeEquipamento *encontrarPorIP(Sistema *s, const char *ip);
 NodeEquipamento *encontrarPorMAC(Sistema *s, const char *mac);
@@ -310,15 +310,15 @@ void guardarInventario(Sistema *s);   // alias
 void menuConectividade(Sistema *s);
 void executarPingEquipamento(Sistema *s);
 void criarIncidenteAutomatico(Sistema *s);
-void guardarResultadoPing(Sistema *s);
-void verificarRespostaPing(Sistema *s);
+void guardarResultadoPing(const Sistema *s);
+void verificarRespostaPing(const Sistema *s);
 void atualizarDataVerificacao(Sistema *s);
 void alterarEstadoFalha(Sistema *s);
-void registarTesteLog(Sistema *s);
+void registarTesteLog(const Sistema *s);
 void criarIncidenteAutoPorFalhaNoPing(Sistema *s);
 void pingGeral(Sistema *s);
 void mostrarFerramentasExtras(Sistema *s);
-void executarComandosRedeExtra(Sistema *s);
+void executarComandosRedeExtra(const Sistema *s);
 void obterInfoRedeLocal(void);
 void obterTabelaARP(void);
 void obterResolucaoDNS(void);
@@ -343,14 +343,14 @@ void consultarEstadoAPI(void);
 void menuIncidente(Sistema *s);
 void criarIncidente(Sistema *s);
 void criarIncidenteAutoPorLeituraAnomalaDoSensor(Sistema *s);
-void gerirIncidentesPendentesNaFilaDeAtendimento(Sistema *s);
+void gerirIncidentesPendentesNaFilaDeAtendimento(const Sistema *s);
 void processarProximoIncidenteNaFilaDeAtendimento(Sistema *s);
-void resolverEConcluirIncidenteDataHora(Sistema *s);
+void resolverEConcluirIncidenteDataHora(const Sistema *s);
 void listarIncidentesPendentes(const Sistema *s);
 void listarIncidentesEmCurso(const Sistema *s);
 void listarIncidentesConcluidos(const Sistema *s);
-void listarIncidentesPorEntidade(Sistema *s, char *entidadeId);
-void listarIncidentesPorPrioridadeComParam(Sistema *s, int prioridade);
+void listarIncidentesPorEntidade(const Sistema *s, char *entidadeId);
+void listarIncidentesPorPrioridadeComParam(const Sistema *s, int prioridade);
 void guardarCarregarIncidentesFicheiroBinario(Sistema *s);
 void outrasAtividadesRelevantes(Sistema *s);
 
@@ -358,7 +358,7 @@ void outrasAtividadesRelevantes(Sistema *s);
 void inicializarFilaAtendimento(Sistema *s);
 void adicionarNaFilaAtendimento(Sistema *s, int codigoIncidente);
 int removerDaFilaAtendimento(Sistema *s);
-void listarFilaAtendimento(Sistema *s);
+void listarFilaAtendimento(const Sistema *s);
 
 /* ================= MODULO 5 - CONFIGURAÇÕES ================= */
 void registarConfiguracao(Sistema *s);
@@ -376,20 +376,20 @@ void menuRelatorios(Sistema *s);
 void carregarFicheiro(Sistema *s);
 void guardarFicheiro(const Sistema *s);
 void importarLeiturasSensores(Sistema *s);
-void guardarResultadosRede(Sistema *s);
-void gerarRelatorioEstadoRede(Sistema *s);
-void gerarRelatorioMensalIncidentes(Sistema *s);
+void guardarResultadosRede(const Sistema *s);
+void gerarRelatorioEstadoRede(const Sistema *s);
+void gerarRelatorioMensalIncidentes(const Sistema *s);
 void outrasAtividadesRelatorios(Sistema *s);
-void listarEquipamentosOrdenados(Sistema *s);
-void resumoTextualEstadoRede(Sistema *s);
+void listarEquipamentosOrdenados(const Sistema *s);
+void resumoTextualEstadoRede(const Sistema *s);
 
 /* Funções para ficheiros binários completos */
 void carregarTodosDados(Sistema *s);
-void guardarTodosDados(Sistema *s);
+void guardarTodosDados(const Sistema *s);
 void carregarEquipamentos(Sistema *s);
 void guardarEquipamentos(Sistema *s);
 void carregarIncidentes(Sistema *s);
-void guardarIncidentes(Sistema *s);
+void guardarIncidentes(const Sistema *s);
 
 /* ================= Modulo 7 - Ficheiros ================= */
 void menuFicheiro(Sistema *s);

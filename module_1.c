@@ -776,6 +776,7 @@ void menuEquipamento(Sistema *s)
     int opcao;
     do
     {
+        _sleep(20);
         limparEcra();
         printf("\n  ╔══════════════════════════════════════╗\n");
         printf("  ║    MÓDULO 1 — INVENTÁRIO             ║\n");

@@ -349,7 +349,7 @@ void resolverEConcluirIncidenteDataHora(const Sistema *s);
 void listarIncidentesPendentes(const Sistema *s);
 void listarIncidentesEmCurso(const Sistema *s);
 void listarIncidentesConcluidos(const Sistema *s);
-void listarIncidentesPorEntidade(const Sistema *s, char *entidadeId);
+void listarIncidentesPorEntidade(const Sistema *s, const char *entidadeId);
 void listarIncidentesPorPrioridadeComParam(const Sistema *s, int prioridade);
 void guardarCarregarIncidentesFicheiroBinario(Sistema *s);
 void outrasAtividadesRelevantes(Sistema *s);
@@ -379,7 +379,7 @@ void importarLeiturasSensores(Sistema *s);
 void guardarResultadosRede(const Sistema *s);
 void gerarRelatorioEstadoRede(const Sistema *s);
 void gerarRelatorioMensalIncidentes(const Sistema *s);
-void outrasAtividadesRelatorios(Sistema *s);
+void outrasAtividadesRelatorios(const Sistema *s);
 void listarEquipamentosOrdenados(const Sistema *s);
 void resumoTextualEstadoRede(const Sistema *s);
 

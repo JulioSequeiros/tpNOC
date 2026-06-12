@@ -115,7 +115,7 @@ void registarConfiguracao(Sistema *s)
     printf("  Tipos de configuracao comuns: INTERFACE, ROUTING, VLAN, ACL, SENHA, SNMP, QOS, OUTRO\n");
     lerString("  Tipo de configuracao", cfg.tipoConfiguracao, MAX_TIPO_CONFIG);
 
-    /* Preencher valorAnterior automaticamente a partir da ultima config deste equipamento na pilha */
+    /* Preencher valorAnterior automaticamente a partir da última config deste equipamento na pilha */
     const NodeConfiguracao *atual = s->pilhaConfiguracoes.topo;
     while (atual != NULL && atual->dados.codigoEquipamento != cod)
         atual = atual->proximo;
@@ -201,7 +201,7 @@ void consultarNConfiguracoes(const Sistema *s)
 }
 
 /*
- *  4.  Reverter ultima configuração (pop + restaurar equipamento)
+ *  4. Reverter ultima configuração (‘pop’ + restaurar equipamento)
  */
 
 void reverterUltimaConfiguracao(Sistema *s)

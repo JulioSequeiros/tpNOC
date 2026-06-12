@@ -12,7 +12,7 @@ void obterDataHoraAtual(char *datahora)
     strftime(datahora, MAX_DATAHORA, "%d-%m-%Y %H:%M:%S", tm);
 }
 
-// Converte string de estado para enum
+// Converte 'string' de estado para enum
 EstadoSensor parseEstadoSensor(const char *estadoStr)
 {
     if (strcmp(estadoStr, "AVISO") == 0)      return SENSOR_AVISO;
@@ -21,7 +21,7 @@ EstadoSensor parseEstadoSensor(const char *estadoStr)
     return SENSOR_NORMAL;
 }
 
-// Regista mensagem no log dos sensores
+// Regista mensagem no 'log' dos sensores
 void registarLogSensores(const char *mensagem)
 {
     FILE *f = fopen(FICH_LOG_SENSORES, "a");
@@ -533,7 +533,7 @@ void consultarEstadoAPI(void)
             continue;
         }
 
-        /* Primeira linha nao-comentario = cabecalho */
+        /* Primeira linha não comentario = cabecalho */
         if (!header_done) {
             header_done = 1;
             printf("\n  %-14s %-22s %8s %-7s %-10s %s\n",
@@ -544,10 +544,10 @@ void consultarEstadoAPI(void)
             continue;
         }
 
-        /* Linhas de dados: tokenizar por ';'
+        /* Linhas de dados: tokenizar por
          * Campos (0-indexed): 0=timestamp 1=seq 2=site 3=rack
          *   4=sensor_code 5=sensor_label 6=sensor_kind
-         *   7=value 8=unit 9=status ... 14=message */
+         *   7=value 8=unit 9=status... 14=message */
         char buf[512];
         strncpy(buf, linha, sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';

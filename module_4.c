@@ -1,6 +1,6 @@
 // Modulo 4: Incidentes Tecnicos
 // Created by Guilherme Fernandes on 24/05/26.
-// Comentários adicionados para estudo
+
 
 #include "noc.h"  // Inclui o header principal com estruturas e funções globais
 
@@ -799,10 +799,10 @@ void listarIncidentesConcluidos(const Sistema *s)
 }
 
 // 10. Listar incidentes por equipamento/sensor (filtro por código)
-void listarIncidentesPorEntidade(const Sistema *s, char *entidadeId)
+void listarIncidentesPorEntidade(const Sistema *s, const char *entidadeId)
 {
     limparEcra();
-    int codigo = atoi(entidadeId);  // Converte 'string' para inteiro
+    const int codigo = atoi(entidadeId);  // Converte 'string' para inteiro
 
     printf("\n  ═══════════════════════════════════════════════════════════╗\n");
     printf("  ║        INCIDENTES DO EQUIPAMENTO/SENSOR %d                ║\n", codigo);

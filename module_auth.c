@@ -23,7 +23,7 @@ static unsigned int hashSenha(const char *senha)
 }
 
 /* Lê senha mascarando cada caracter com '*'.
- * Quando stdin nao e um terminal (pipe/redirect) usa fgets sem mascara. */
+ * Quando stdin não e um terminal (pipe/redirect) usa 'fgets' sem máscara. */
 static void lerSenha(const char *prompt, char *dest, int maxLen)
 {
     printf("%s: ", prompt);
@@ -31,7 +31,7 @@ static void lerSenha(const char *prompt, char *dest, int maxLen)
 #ifdef _WIN32
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     if (GetFileType(hIn) == FILE_TYPE_CHAR) {
-        /* Terminal interativo — mascara com '*' */
+        /* Terminal interativo — máscara com '*' */
         int i = 0, c;
         while ((c = _getch()) != '\r' && i < maxLen - 1) {
             if (c == '\b' && i > 0) { i--; printf("\b \b"); }
@@ -87,7 +87,7 @@ static void guardarCredenciais(const Credencial *creds, int total)
     fclose(f);
 }
 
-/* Cria ficheiro de credenciais com conta padrao se ainda nao existir */
+/* Cria ficheiro de credenciais com conta padrao se ainda não existir */
 void inicializarTecnicos(void)
 {
     FILE *f = fopen(FICH_TECNICOS, "rb");
@@ -104,8 +104,8 @@ void inicializarTecnicos(void)
     printf("\n  [INFO] 1.a execucao — conta criada:  utilizador: admin  |  senha: admin123\n");
 }
 
-/* Bloqueia o arranque ate login valido.
- * Devolve 1 em caso de sucesso, 0 apos 3 tentativas falhadas. */
+/* Bloqueia o arranque até 'login' valido.
+ * Devolve 1 em caso de sucesso, 0 após 3 tentativas falhadas. */
 int autenticarTecnico(Sistema *s)
 {
     Credencial *creds;

@@ -4,7 +4,11 @@
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
 #include <windows.h>  // Sleep() está aqui
+#else
+#include <unistd.h>   // sleep() no Linux
+#endif
 #include <string.h>
 #include <time.h>
 #include <ctype.h>

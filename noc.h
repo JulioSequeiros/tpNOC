@@ -4,9 +4,11 @@
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>  // Sleep() está aqui
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+
 
 /* ================= CONSTANTES ================= */
 

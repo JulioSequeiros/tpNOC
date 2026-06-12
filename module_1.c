@@ -142,6 +142,7 @@ void limparEcra(void)
 {
 #ifdef _WIN32
     system("cls");
+    Sleep(20);
 #else
     system("clear");
 #endif
@@ -776,8 +777,9 @@ void menuEquipamento(Sistema *s)
     int opcao;
     do
     {
-        //_sleep(20);
+
         limparEcra();
+
         printf("\n  ╔══════════════════════════════════════╗\n");
         printf("  ║    MÓDULO 1 — INVENTÁRIO             ║\n");
         printf("  ╠══════════════════════════════════════╣\n");
